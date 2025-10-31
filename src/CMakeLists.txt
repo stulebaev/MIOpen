@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2017 Advanced Micro Devices, Inc.
+# Copyright (c) 2025 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -191,7 +191,7 @@ set( MIOpen_Source
     rope_api.cpp
     rope/problem_description.cpp
     scalar.cpp
-    softmarginloss/problem_description.cpp 
+    softmarginloss/problem_description.cpp
     softmarginloss_api.cpp
     softmax.cpp
     softmax_api.cpp
@@ -381,7 +381,6 @@ if( MIOPEN_BACKEND MATCHES "OpenCL" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN
     file(GLOB_RECURSE GPU_BATCHED_TRANSPOSE_KERNEL_HIP "kernels/gpu_batched_transpose_kernel/*.cpp")
     file(GLOB_RECURSE GPU_GENERAL_TENSOR_REORDER_KERNEL_HIP_INCLUDE "kernels/gpu_general_tensor_reorder_kernel/*.hpp")
     file(GLOB_RECURSE GPU_GENERAL_TENSOR_REORDER_KERNEL_HIP_SOURCE "kernels/gpu_general_tensor_reorder_kernel/*.cpp")
-
 
     set(MIOPEN_KERNEL_INCLUDES
         ${STATIC_COMPOSABLE_KERNEL_INCLUDE}
@@ -725,7 +724,7 @@ if( MIOPEN_BACKEND MATCHES "OpenCL" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN
         )
 endif()
 
-if(MIOPEN_USE_ROCBLAS OR MIOPEN_USE_HIPBLASLT)
+if( MIOPEN_USE_ROCBLAS OR MIOPEN_USE_HIPBLASLT )
     list(APPEND MIOpen_Source
         gemm_v2.cpp
     )
@@ -740,7 +739,7 @@ if( MIOPEN_BACKEND STREQUAL "OpenCL" )
     )
 endif()
 
-if( MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_BACKEND STREQUAL "HIP")
+if( MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_BACKEND STREQUAL "HIP" )
     list(APPEND MIOpen_Source
         hip/hiperrors.cpp
         hip/handlehip.cpp
@@ -749,7 +748,7 @@ if( MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_BACKEND STREQUAL "HIP")
         )
 endif()
 
-if( MIOPEN_BACKEND STREQUAL "HIPNOGPU")
+if( MIOPEN_BACKEND STREQUAL "HIPNOGPU" )
     list(APPEND MIOpen_Source
         hip/hiperrors.cpp
         nogpu/handle.cpp
@@ -844,7 +843,7 @@ if(HAS_LIB_STD_FILESYSTEM)
     target_link_libraries(MIOpen PRIVATE stdc++fs)
 endif()
 
-find_package(zstd)
+find_package(zstd QUIET)
 if(zstd_FOUND)
     target_link_libraries(MIOpen PRIVATE $<IF:$<TARGET_EXISTS:zstd::libzstd_shared>,zstd::libzstd_shared,zstd::libzstd_static>)
 endif()
@@ -859,7 +858,7 @@ target_include_directories(MIOpen PUBLIC
 )
 
 if(MIOPEN_USE_COMPOSABLEKERNEL)
-    if(MIOPEN_BUILD_CK )
+    if(MIOPEN_BUILD_CK)
         # the aliased target doesnt exist when we build CK inline as part of MIOPEN.  The aliased target only is not 
         # global when you build it so we dont have access to it. 
         set(MIOPEN_CK_LINK_FLAGS device_conv_operations hip::host)
@@ -975,10 +974,8 @@ endif()
 target_link_libraries(MIOpen PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(MIOpen INTERFACE $<BUILD_INTERFACE:nlohmann_json::nlohmann_json>)
 
-target_internal_library(MIOpen
-    Boost::filesystem
-)
-list(APPEND PACKAGE_STATIC_DEPENDS PACKAGE Boost COMPONENTS filesystem)
+#target_internal_library(MIOpen Boost::filesystem)
+#list(APPEND PACKAGE_STATIC_DEPENDS PACKAGE Boost COMPONENTS filesystem)
 if(NOT WIN32 AND NOT APPLE)
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/lib.def "
 MIOPEN_${MIOPEN_BACKEND}_1
@@ -997,9 +994,9 @@ local:
 ")
     target_link_libraries(MIOpen PRIVATE "-Wl,--version-script=${CMAKE_CURRENT_BINARY_DIR}/lib.def")
     target_link_libraries(MIOpen PRIVATE "-Wl,--exclude-libs,ALL")
-    # set_target_properties(MIOpen PROPERTIES CXX_VISIBILITY_PRESET hidden)
     set_target_properties(MIOpen PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
 endif()
+
 #######################################
 if(MIOPEN_ENABLE_SQLITE)
     # MIOpen depends on SQLite

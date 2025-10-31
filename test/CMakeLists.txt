@@ -109,7 +109,7 @@ set(MIOPEN_TEST_GPU_DETECTION_FAILED FALSE)
 set(MIOPEN_NO_GPU FALSE)
 if(NOT (MIOPEN_TEST_GFX900 OR MIOPEN_TEST_GFX906 OR MIOPEN_TEST_GFX908 OR MIOPEN_TEST_GFX90A OR MIOPEN_TEST_GFX94X OR MIOPEN_TEST_GFX95X OR MIOPEN_TEST_GFX103X OR MIOPEN_TEST_GFX110X OR MIOPEN_TEST_GFX120X OR MIOPEN_TEST_HIP_NOGPU))
     find_program(ROCMINFO
-        NAMES rocminfo
+        NAMES rocminfo amdgpu-arch
         PATHS
             /opt/rocm
             ${CMAKE_INSTALL_PREFIX}
@@ -118,7 +118,7 @@ if(NOT (MIOPEN_TEST_GFX900 OR MIOPEN_TEST_GFX906 OR MIOPEN_TEST_GFX908 OR MIOPEN
     )
     message(STATUS "rocminfo utility: ${ROCMINFO}")
     if(ROCMINFO)
-        execute_process (
+        execute_process(
             COMMAND ${ROCMINFO}
             OUTPUT_VARIABLE ROCMINFO_OUTPUT
             RESULT_VARIABLE ROCMINFO_EXIT_STATUS
@@ -220,7 +220,6 @@ endif()
 if(MIOPEN_TEST_WITH_MIOPENDRIVER)
     add_dependencies(check MIOpenDriver)
 endif()
-
 
 set(MIOPEN_GTEST_SUFFIX)
 set(MIOPEN_TEST_FLOAT_ARG)
@@ -849,7 +848,7 @@ add_custom_test(conv_transposed_wrw_find_2
     COMMAND $<TARGET_FILE:test_conv2d_find2> ${TEST_CONV_VERBOSE_W} --input 64 64  28 28 --weights 64  64  1 1 --pads_strides_dilations 0 0 1 1 1 1 --cmode transpose ${MIOPEN_TEST_FLAGS_ARGS}
 )
 
-#Dont install the tests if we are building each test separately
+#Don't install the tests if we are building each test separately
 #When the tests are built as a single unit, then we want to be
 #able to package them
 set(INSTALL_GTEST OFF)

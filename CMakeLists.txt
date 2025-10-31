@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2017 Advanced Micro Devices, Inc.
+# Copyright (c) 2025 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,9 +23,9 @@
 # SOFTWARE.
 #
 ################################################################################
-cmake_minimum_required( VERSION 3.15 )
+cmake_minimum_required(VERSION 3.15)
 
-if (POLICY CMP0074)
+if(POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif()
 
@@ -67,29 +67,36 @@ else()
 endif()
 
 # Default installation path
-if(NOT WIN32)
+if(WIN32)
+    set(CMAKE_INSTALL_PREFIX $ENV{HIP_PATH})
+else()
     set(CMAKE_INSTALL_PREFIX "/opt/rocm" CACHE PATH "")
 endif()
 
-project ( MIOpen C CXX )
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+if(WIN32)
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake.win)
+    list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake.win)
+endif()
+include(rocm-path)
+
+project( MIOpen CXX )
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-include(CTest)
-
 find_package(Threads REQUIRED)
-find_package(ROCM 0.7.3 REQUIRED PATHS /opt/rocm)
 
+find_package(ROCmCMakeBuildTools)
 include(ROCMInstallTargets)
 include(ROCMPackageConfigHelpers)
 include(ROCMSetupVersion)
 include(ROCMInstallSymlinks)
 include(ROCMCreatePackage)
-include(CheckCXXCompilerFlag)
 include(ROCMHeaderWrapper)
 
+include(CheckCXXCompilerFlag)
 include(cmake/ClangCheck.cmake)
 
 # Build library with Beta APIs
@@ -116,10 +123,13 @@ endif()
 set(MIOPEN_LOG_FUNC_TIME_ENABLE Off CACHE BOOL "")
 set(MIOPEN_ENABLE_SQLITE_BACKOFF On CACHE BOOL "")
 
-option( BUILD_DEV "Build for development only" OFF)
-option(MIOPEN_ENABLE_FIN "Enable the fin driver for MIOpen"  OFF)
-option(MIOPEN_ENABLE_FIN_INTERFACE "Enable internal interface for the fin" ${MIOPEN_ENABLE_FIN})
+option(BUILD_DEV "Build for development only" OFF)
 option(MIOPEN_STRIP_SYMBOLS "Strip symbols in release mode" ON)
+
+option(MIOPEN_INCBIN "Include kernels using incbin" OFF)
+if(MIOPEN_INCBIN)
+    enable_language(ASM)
+endif()
 
 option(MIOPEN_WORKAROUND_USE_BOOST_FILESYSTEM "Workaround: Use boost::filesystem instead of std::filesystem" OFF)
 message(STATUS "MIOPEN_WORKAROUND_USE_BOOST_FILESYSTEM ${MIOPEN_WORKAROUND_USE_BOOST_FILESYSTEM}")
@@ -130,9 +140,8 @@ if(MIOPEN_STRIP_SYMBOLS AND NOT WIN32 AND NOT APPLE)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 endif()
 
-rocm_setup_version(VERSION 3.5.0)
+rocm_setup_version(VERSION 3.5.1)
 
-list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake )
 include(TargetFlags)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -157,21 +166,19 @@ if(NOT WIN32 AND NOT MIOPEN_WORKAROUND_USE_BOOST_FILESYSTEM)
     check_cxx_linker_flag(-lstdc++fs HAS_LIB_STD_FILESYSTEM)
 endif()
 
-list(APPEND CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX} ${CMAKE_INSTALL_PREFIX}/llvm ${CMAKE_INSTALL_PREFIX}/hip /opt/rocm /opt/rocm/llvm /opt/rocm/hip)
-
 option(ENABLE_HIP_WORKAROUNDS Off)
 set(MIOPEN_INSTALL_CXX_HEADERS Off CACHE BOOL "Install MIOpen's C++ header interface")
 
 set_var_to_condition(MIOPEN_OFFLINE_COMPILER_PATHS_V2_DEFAULT FALSE)
 option(MIOPEN_OFFLINE_COMPILER_PATHS_V2 "Use rocm-core to find offline GPU compiler" ${MIOPEN_OFFLINE_COMPILER_PATHS_V2_DEFAULT})
-message( STATUS "MIOPEN_OFFLINE_COMPILER_PATHS_V2: ${MIOPEN_OFFLINE_COMPILER_PATHS_V2}" )
+message(STATUS "MIOPEN_OFFLINE_COMPILER_PATHS_V2: ${MIOPEN_OFFLINE_COMPILER_PATHS_V2}")
 
 # Embedded Build Configuration
 set(MIOPEN_EMBED_DB "" CACHE STRING "Semi-colon separated list of architecture to embed on-disk DBs in the binary. Example gfx906_60;gfx900_56")
 if(NOT MIOPEN_EMBED_DB STREQUAL "")
-    option(MIOPEN_DISABLE_SYSDB  "Disable sys database access" Off)
+    option(MIOPEN_DISABLE_SYSDB "Disable sys database access" Off)
 else()
-    option(MIOPEN_DISABLE_SYSDB  "Disable sys database access" ${MIOPEN_EMBED_BUILD})
+    option(MIOPEN_DISABLE_SYSDB "Disable sys database access" ${MIOPEN_EMBED_BUILD})
 endif()
 set(MIOPEN_BINCACHE_PATH "" CACHE STRING "URL or path containing binary cache files to embed")
 option(MIOPEN_EMBED_BINCACHE "Embed Binary Cache or KDB" Off)
@@ -197,17 +204,16 @@ if(MIOPEN_EMBED_BUILD)
     endif()
 endif()
 
-set( MIOPEN_BACKEND ${MIOPEN_DEFAULT_BACKEND} CACHE STRING
-    "Which of MIOpens's backends to use?" )
-set_property( CACHE MIOPEN_BACKEND PROPERTY STRINGS
-    OpenCL HIP HIPOC HIPNOGPU)
+set( MIOPEN_BACKEND ${MIOPEN_DEFAULT_BACKEND} CACHE STRING "Which of MIOpens's backends to use?" )
+set_property( CACHE MIOPEN_BACKEND PROPERTY STRINGS OpenCL HIP HIPOC HIPNOGPU )
 
-set_var_to_condition(MIOPEN_BUILD_DRIVER_DEFAULT (NOT MIOPEN_EMBED_BUILD) AND (NOT (MIOPEN_BACKEND STREQUAL "HIPNOGPU")))
+# On Windows, internal symbols are only exported when BUILD_TESTING=true. As a result, building driver with BUILD_TESTING=false will result in failure.
+set_var_to_condition(MIOPEN_BUILD_DRIVER_DEFAULT (NOT MIOPEN_EMBED_BUILD) AND (NOT (MIOPEN_BACKEND STREQUAL "HIPNOGPU")) AND ((NOT WIN32) OR BUILD_TESTING))
 option(MIOPEN_BUILD_DRIVER "Build MIOpenDriver (and use it in tests)" ${MIOPEN_BUILD_DRIVER_DEFAULT})
 message(STATUS "MIOPEN_BUILD_DRIVER: ${MIOPEN_BUILD_DRIVER}" )
 
 # OpenCL 1.2
-if( MIOPEN_BACKEND STREQUAL "OpenCL")
+if( MIOPEN_BACKEND STREQUAL "OpenCL" )
     set(MIOPEN_BACKEND_OPENCL 1)
     find_package( OpenCL REQUIRED )
     find_program(MIOPEN_HIP_COMPILER clang++
@@ -239,7 +245,14 @@ if(NOT HIP_PLATFORM AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 # HIP is always required
-find_package(hip REQUIRED PATHS /opt/rocm)
+if(NOT HIP_PATH)
+  if(WIN32)
+    set(HIP_PATH $ENV{HIP_PATH})
+  else()
+    set(HIP_PATH /opt/rocm)
+  endif()
+endif()
+find_package(hip REQUIRED PATHS ${HIP_PATH})
 message(STATUS "Build with HIP ${hip_VERSION} ${hip_DIR}")
 
 # Override HIP version in config.h, if necessary.
@@ -329,15 +342,16 @@ message(STATUS "Hip compiler flags: ${HIP_COMPILER_FLAGS}")
 add_compile_definitions($<$<COMPILE_LANGUAGE:CXX>:HIP_COMPILER_FLAGS=${HIP_COMPILER_FLAGS}>)
 
 # HIP
-if( MIOPEN_BACKEND STREQUAL "HIP" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_BACKEND STREQUAL "HIPNOGPU")
+if(MIOPEN_BACKEND STREQUAL "HIP" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_BACKEND STREQUAL "HIPNOGPU")
     if(MIOPEN_USE_COMPOSABLEKERNEL)
         if(MIOPEN_BUILD_CK)
             include(cmake/Dependencies.cmake)
-
-            file(READ "${CMAKE_SOURCE_DIR}/requirements.txt" REQUIREMENTS_TXT_CONTENTS)
-            string(REGEX MATCH "ROCm/composable_kernel@([a-fA-F0-9]+)" _match "${REQUIREMENTS_TXT_CONTENTS}")
+            execute_process(
+                COMMAND bash -c "grep -P -o '^[ \t]*(?<!#)[ \t]*ROCm\/composable_kernel@[a-fA-F0-9]+' ${CMAKE_SOURCE_DIR}/requirements.txt"
+                OUTPUT_VARIABLE _match
+            )
             if(_match)
-                string(REGEX REPLACE "ROCm/composable_kernel@([a-fA-F0-9]+).*" "\\1" COMPOSABLE_KERNEL_HASH "${_match}")
+                string(REGEX REPLACE "[ \t]*ROCm/composable_kernel@([a-fA-F0-9]+).*" "\\1" COMPOSABLE_KERNEL_HASH "${_match}")
                 message(STATUS "Parsed composable_kernel hash from requirements.txt: ${COMPOSABLE_KERNEL_HASH}")
             else()
                 message(FATAL_ERROR "Could not find ROCm/composable_kernel@<hash> in requirements.txt")
@@ -347,7 +361,7 @@ if( MIOPEN_BACKEND STREQUAL "HIP" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_B
             find_package(composable_kernel 1.0.0 COMPONENTS device_conv_operations)
         endif()
     endif()
-    if( MIOPEN_BACKEND STREQUAL "HIPNOGPU")
+    if(MIOPEN_BACKEND STREQUAL "HIPNOGPU")
         set(MIOPEN_MODE_NOGPU 1)
     endif()
     set(MIOPEN_BACKEND_HIP 1)
@@ -355,9 +369,8 @@ if( MIOPEN_BACKEND STREQUAL "HIP" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_B
     find_program(HIP_OC_COMPILER NAMES amdclang clang
         PATH_SUFFIXES bin
         PATHS
-            /opt/rocm
+            ${HIP_PATH}
             ${CMAKE_INSTALL_PREFIX}
-        ENV HIP_PATH
     )
     if(HIP_OC_COMPILER)
         message(STATUS "OpenCL compiler: ${HIP_OC_COMPILER}")
@@ -366,15 +379,15 @@ if( MIOPEN_BACKEND STREQUAL "HIP" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_B
         message(STATUS "OpenCL compiler not found")
     endif()
 
-        # Hcc's clang always defines __HCC__ even when not using hcc driver
-        add_definitions(-U__HCC__)
+    # Hcc's clang always defines __HCC__ even when not using hcc driver
+    add_definitions(-U__HCC__)
 
     set(MIOPEN_HIP_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "")
 
     # rocblas
     set(MIOPEN_USE_ROCBLAS ON CACHE BOOL "")
     if(MIOPEN_USE_ROCBLAS)
-        find_package(rocblas REQUIRED PATHS /opt/rocm)
+        find_package(rocblas REQUIRED PATHS ${HIP_PATH})
         message(STATUS "Build with rocblas ${rocblas_VERSION} ${rocblas_DIR}")
     else()
         message(STATUS "Build without rocblas")
@@ -384,21 +397,21 @@ if( MIOPEN_BACKEND STREQUAL "HIP" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_B
     set_var_to_condition(MIOPEN_USE_HIPBLASLT_DEFAULT NOT WIN32)
     option(MIOPEN_USE_HIPBLASLT "Use hipBlasLt" ${MIOPEN_USE_HIPBLASLT_DEFAULT})
     if(MIOPEN_USE_HIPBLASLT)
-        find_package(hipblaslt REQUIRED PATHS /opt/rocm $ENV{HIP_PATH})
+        find_package(hipblaslt REQUIRED PATHS ${HIP_PATH})
         message(STATUS "Build with hipBLASLt ${hipblaslt_VERSION} ${hipblaslt_DIR}")
-        find_package(hipblas-common REQUIRED PATHS /opt/rocm $ENV{HIP_PATH})
+        find_package(hipblas-common REQUIRED PATHS ${HIP_PATH})
         message(STATUS "Build with hipBLAS-common ${hipblas-common_VERSION} ${hipBLAS-common_DIR}")
     else()
         message(STATUS "Build without hipbBLASLt")
     endif()
 else()
-    #CK is only enabled when HIP backend is selected   
+    #CK is only enabled when HIP backend is selected
     set(MIOPEN_USE_COMPOSABLEKERNEL Off)
     if(MIOPEN_USE_HIPRTC)
         message(FATAL_ERROR "HIPRTC cannot be used without HIP backend")
     endif()
 endif()
-message( STATUS "${MIOPEN_BACKEND} backend selected." )
+message(STATUS "${MIOPEN_BACKEND} backend selected.")
 
 # look for and register clang-offload-bundler
 if(MIOPEN_HIP_COMPILER MATCHES ".*clang\\+\\+.*")
@@ -416,7 +429,7 @@ else()
     message(STATUS "clang-offload-bundler not found")
 endif()
 
-set_var_to_condition(MIOPEN_USE_MLIR_DEFAULT NOT (NOT ${BUILD_SHARED_LIBS} AND ${MIOPEN_USE_COMGR}))
+set_var_to_condition(MIOPEN_USE_MLIR_DEFAULT (NOT ${MIOPEN_USE_COMGR}))
 option(MIOPEN_USE_MLIR "Use MLIR compilation backend" ${MIOPEN_USE_MLIR_DEFAULT})
 
 if(MIOPEN_USE_MLIR)
@@ -485,27 +498,16 @@ if(MIOPEN_USE_HIPRTC)
     message(STATUS "Build with hiprtc ${hiprtc_VERSION} ${hiprtc_DIR}")
 endif()
 
-option(Boost_USE_STATIC_LIBS "Use boost static libraries" ON)
-set(BOOST_COMPONENTS filesystem)
-if(MIOPEN_BUILD_DRIVER)
-    # boost core is a header only component that can't be found by find_package
-    # list(APPEND BOOST_COMPONENTS core)
-endif()
-
-# The FindBoost module has been removed since CMake 3.30. Use the Boost 1.83 configuration file instead.
-add_definitions(-DBOOST_ALL_NO_LIB=1)
-find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS} CONFIG)
-
 find_path(HALF_INCLUDE_DIR half/half.hpp)
 message(STATUS "HALF_INCLUDE_DIR: ${HALF_INCLUDE_DIR}")
 
-option( MIOPEN_DEBUG_FIND_DB_CACHING "Use system find-db caching" ON)
+option(MIOPEN_DEBUG_FIND_DB_CACHING "Use system find-db caching" ON)
 
 if(WIN32)
     set( DATA_INSTALL_DIR bin )
-    set( DATABASE_INSTALL_DIR ${DATA_INSTALL_DIR})
+    set( DATABASE_INSTALL_DIR ${DATA_INSTALL_DIR} )
 else()
-    set( MIOPEN_INSTALL_DIR miopen)
+    set( MIOPEN_INSTALL_DIR miopen )
     set( DATA_INSTALL_DIR ${CMAKE_INSTALL_DATADIR}/${MIOPEN_INSTALL_DIR} )
     set( DATABASE_INSTALL_DIR ${DATA_INSTALL_DIR}/db )
 endif()
@@ -649,25 +651,19 @@ endforeach()
 
 function(install_kdb FILE_NAME COMPONENT_NAME)
     if(EXISTS "${FILE_NAME}")
-        file(READ ${FILE_NAME} __contents LIMIT 7)
-        get_filename_component(__fname ${FILE_NAME} NAME_WLE)
-        if(__contents MATCHES "version")
-            list(APPEND LFS_MISSING_FILES ${__fname})
-        else()
-            unpack_db(${FILE_NAME})
-            if( NOT ENABLE_ASAN_PACKAGING )
-                if( NOT MIOPEN_TEST_DBSYNC )
-                    set(__component_name COMPONENT ${COMPONENT_NAME})
-                endif()
-                rocm_install(FILES ${KERNELS_BINARY_DIR}/${__fname}
-                            DESTINATION ${DATABASE_INSTALL_DIR}
-                            ${__component_name})
+        unpack_db(${FILE_NAME})
+        if( NOT ENABLE_ASAN_PACKAGING )
+            if( NOT MIOPEN_TEST_DBSYNC )
+                set(__component_name COMPONENT ${COMPONENT_NAME})
             endif()
+            rocm_install(FILES ${KERNELS_BINARY_DIR}/${__fname}
+                        DESTINATION ${DATABASE_INSTALL_DIR}
+                        ${__component_name})
         endif()
     else()
-        list(APPEND LFS_MISSING_FILES ${FILE_NAME})
+        list(APPEND DVC_MISSING_FILES ${FILE_NAME})
     endif()
-    set(LFS_MISSING_FILES ${LFS_MISSING_FILES} PARENT_SCOPE)
+    set(DVC_MISSING_FILES ${DVC_MISSING_FILES} PARENT_SCOPE)
 endfunction()
 
 # Both the lists below should be in sync always
@@ -689,10 +685,10 @@ else()
     endforeach()
 endif()
 
-if(LFS_MISSING_FILES)
-    string(REPLACE ";" ", " __lfs_missing_files "${LFS_MISSING_FILES}")
-    message(WARNING "GIT LFS files not pulled down, skipped: ${__lfs_missing_files}")
-    set(MIOPEN_NO_LFS_PULLED TRUE CACHE INTERNAL "")
+if(DVC_MISSING_FILES)
+    string(REPLACE ";" ", " __dvc_missing_files "${DVC_MISSING_FILES}")
+    message(WARNING "DVC files not pulled down, skipped: ${__dvc_missing_files}")
+    set(MIOPEN_NO_DVC_PULLED TRUE CACHE INTERNAL "")
 else()
     set(CPACK_COMPONENTS_ALL ${COMPONENT_LST})
 endif()
@@ -828,7 +824,6 @@ enable_cppcheck(
         __linux__=1
 )
 
-
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
@@ -845,9 +840,4 @@ endif()
 if(BUILD_TESTING)
     add_subdirectory(test)
     add_subdirectory(speedtests)
-endif()
-
-add_subdirectory(utils)
-if(MIOPEN_ENABLE_FIN)
-    add_subdirectory(fin)
 endif()

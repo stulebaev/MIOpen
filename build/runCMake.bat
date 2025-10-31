@@ -1,0 +1,2 @@
+cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DHALF_INCLUDE_DIR=.\include -DUNZIPPER=../bin/bzip2.exe -DBUILD_TESTING=ON -DGTest_DIR=%~dp0..\GTest\lib\cmake\GTest ..
+::-DCMAKE_CXX_COMPILER=%HIP_PATH%\bin\hipcc.exe -DMIOPEN_BACKEND=HIPNOGPU -DGPU_TARGETS=gfx11-generic
