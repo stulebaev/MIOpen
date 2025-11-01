@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +35,7 @@
 #include <limits>
 #include <iostream>
 #include <sstream>
-#include <ranges>
+//#include <ranges>
 
 #define BATCHED_TRANSPOSE_BLOCK_SIZE 256
 #define BATCHED_TRANSPOSE_PERSISTENT 0
@@ -169,41 +169,41 @@ static inline const std::vector<BatchedTransposeParam>& GetKernelList(const Exec
 static inline bool IsApplicable(uint32_t /* batch */,
                                 uint32_t height,
                                 uint32_t width,
-                                const BatchedTransposeParam* kparam)
+                                const BatchedTransposeParam& kparam)
 {
-    return width % kparam->ediv_x == 0 && height % kparam->ediv_y == 0;
+    return width % kparam.ediv_x == 0 && height % kparam.ediv_y == 0;
 }
 
-static inline bool IsSameSide(uint32_t height, uint32_t width, const BatchedTransposeParam* kparam)
+static inline bool IsSameSide(uint32_t height, uint32_t width, const BatchedTransposeParam& kparam)
 {
-    float radio = 0;
+    float ratio = 0.f;
     if(width > height)
-        radio = static_cast<float>(kparam->tile_x) / kparam->tile_y;
+        ratio = static_cast<float>(kparam.tile_x) / kparam.tile_y;
     else
-        radio = static_cast<float>(kparam->tile_y) / kparam->tile_x;
+        ratio = static_cast<float>(kparam.tile_y) / kparam.tile_x;
 
     // E.g. for cases like width=1000, height=10
     // Allow at least 32x64, 64x64... 16x64 not allowed
-    return radio >= 0.4;
+    return ratio >= 0.4f;
 }
 
 template <typename T>
-static inline float GetNormalizedRadio(T x, T y)
+static inline float GetNormalizedRatio(T x, T y)
 {
     if(y > x)
         return static_cast<float>(y) / x;
     return static_cast<float>(x) / y;
 }
 
-static inline std::string GetKernelName(std::size_t data_size, const BatchedTransposeParam* kparam)
+static inline std::string GetKernelName(std::size_t data_size, const BatchedTransposeParam& kparam)
 {
     std::ostringstream kernel_name;
     std::string type_trait = GetNameTrait(data_size);
-    kernel_name << "batched_transpose_" << kparam->tile_x << "x" << kparam->tile_y << "_";
-    if(!(kparam->pack_x == 1 && kparam->pack_y == 1 && kparam->ediv_x == 1 && kparam->ediv_y == 1))
+    kernel_name << "batched_transpose_" << kparam.tile_x << "x" << kparam.tile_y << "_";
+    if(!(kparam.pack_x == 1 && kparam.pack_y == 1 && kparam.ediv_x == 1 && kparam.ediv_y == 1))
     {
-        kernel_name << "pack_" << kparam->pack_x << "x" << kparam->pack_y << "_ediv_"
-                    << kparam->ediv_x << "x" << kparam->ediv_y << "_";
+        kernel_name << "pack_" << kparam.pack_x << "x" << kparam.pack_y << "_ediv_"
+                    << kparam.ediv_x << "x" << kparam.ediv_y << "_";
     }
     kernel_name << type_trait;
     return kernel_name.str();
@@ -212,11 +212,11 @@ static inline std::string GetKernelName(std::size_t data_size, const BatchedTran
 static inline std::size_t GetExtraPaddingSize(uint32_t /* batch */,
                                               uint32_t height,
                                               uint32_t width,
-                                              const BatchedTransposeParam* kparam)
+                                              const BatchedTransposeParam& kparam)
 {
     // For simplicity and speed, we ignore batch, only compute h*w
-    uint32_t padded_h = ((height + kparam->tile_y - 1) / kparam->tile_y) * kparam->tile_y;
-    uint32_t padded_w = ((width + kparam->tile_x - 1) / kparam->tile_x) * kparam->tile_x;
+    uint32_t padded_h = ((height + kparam.tile_y - 1) / kparam.tile_y) * kparam.tile_y;
+    uint32_t padded_w = (( width + kparam.tile_x - 1) / kparam.tile_x) * kparam.tile_x;
     return static_cast<std::size_t>(padded_h) * padded_w - static_cast<std::size_t>(height) * width;
 }
 
@@ -236,17 +236,17 @@ static inline BatchedTransposeParam HeuristicGet(const ExecutionContext& ctx,
     const auto& kernel_list = GetKernelList(ctx, data_size);
     BatchedTransposeParam best_kernel;
     std::size_t extra_padding_size = std::numeric_limits<std::size_t>::max();
-    float hw_radio                 = GetNormalizedRadio(height, width);
+    float hw_ratio                 = GetNormalizedRatio(height, width);
 
-    if(hw_radio >= 12 && (height <= 8 || width <= 8))
+    if(hw_ratio >= 12 && (height <= 8 || width <= 8))
     {
         // Early heuristic for cases that has very large width, very small height (or vice versa)
-        if(hw_radio <= 48)
+        if(hw_ratio <= 48)
         {
             return (width <= 8) ? BatchedTransposeParam{4, 64, 1, 1, 1, 1}
                                 : BatchedTransposeParam{64, 4, 1, 1, 1, 1};
         }
-        else if(hw_radio <= 128)
+        else if(hw_ratio <= 128)
         {
             return (width <= 8) ? BatchedTransposeParam{4, 128, 1, 1, 1, 1}
                                 : BatchedTransposeParam{128, 4, 1, 1, 1, 1};
@@ -258,47 +258,47 @@ static inline BatchedTransposeParam HeuristicGet(const ExecutionContext& ctx,
         }
     }
 
-    for(const auto& it : std::ranges::reverse_view(kernel_list))
+    for(auto it = kernel_list.rbegin(); it != kernel_list.rend(); ++it)
     {
-        if(it.tile_x == 4 || it.tile_y == 4)
+        if((*it).tile_x == 4 || (*it).tile_y == 4)
         {
             // We don't want such kernel to be selected here,
             // they should be used in above cases
             continue;
         }
-        if(!IsApplicable(batch, height, width, &it))
+        if(!IsApplicable(batch, height, width, *it))
             continue;
-        std::size_t current_padding_size = GetExtraPaddingSize(batch, height, width, &it);
+        std::size_t current_padding_size = GetExtraPaddingSize(batch, height, width, *it);
         bool replace_current             = false;
         if(best_kernel.tile_x == 0 && best_kernel.tile_y == 0)
         {
             // 1st applicable case
             replace_current = true;
         }
-        if(hw_radio > 128)
+        if(hw_ratio > 128)
         {
             // This is for cases that h, w have a great difference
-            if(!IsSameSide(height, width, &it))
+            if(!IsSameSide(height, width, *it))
                 continue;
-            float prev_radio = GetNormalizedRadio(
-                GetNormalizedRadio(best_kernel.tile_y, best_kernel.tile_x), hw_radio);
-            float curr_radio =
-                GetNormalizedRadio(GetNormalizedRadio(it.tile_y, it.tile_x), hw_radio);
+            float prev_ratio = GetNormalizedRatio(
+                GetNormalizedRatio(best_kernel.tile_y, best_kernel.tile_x), hw_ratio);
+            float curr_ratio =
+                GetNormalizedRatio(GetNormalizedRatio((*it).tile_y, (*it).tile_x), hw_ratio);
 
-            if(curr_radio * current_padding_size < prev_radio * extra_padding_size)
+            if(curr_ratio * current_padding_size < prev_ratio * extra_padding_size)
             {
-                if(curr_radio <= prev_radio)
+                if(curr_ratio <= prev_ratio)
                 {
                     replace_current = true;
                 }
             }
-            else if(float_equal(curr_radio * current_padding_size, prev_radio * extra_padding_size))
+            else if(float_equal(curr_ratio * current_padding_size, prev_ratio * extra_padding_size))
             {
                 // If width == height, a greate chance is that the kernel performance would be
                 // almost the same, so ignore this case
-                if((width > height && it.tile_x > it.tile_y &&
+                if((width > height && (*it).tile_x > (*it).tile_y &&
                     best_kernel.tile_x < best_kernel.tile_y) ||
-                   (width < height && it.tile_x < it.tile_y &&
+                   (width < height && (*it).tile_x < (*it).tile_y &&
                     best_kernel.tile_x > best_kernel.tile_y))
                 {
                     replace_current = true;
@@ -316,7 +316,7 @@ static inline BatchedTransposeParam HeuristicGet(const ExecutionContext& ctx,
         if(replace_current)
         {
             extra_padding_size = current_padding_size;
-            best_kernel        = it;
+            best_kernel        = *it;
         }
     }
 
@@ -406,7 +406,7 @@ std::vector<OpKernelArg> BatchedTransposeSolution::GetKernelArg() const
 std::string BatchedTransposeSolution::GetKernelName() const
 {
     std::size_t data_size = miopen::GetTypeSize(data_type);
-    return batched_transpose::GetKernelName(data_size, &kernel_param_heuristic);
+    return batched_transpose::GetKernelName(data_size, kernel_param_heuristic);
 }
 
 bool BatchedTransposeSolution::IsSkippable() const

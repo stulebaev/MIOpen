@@ -104,9 +104,9 @@ int mlo_construct_norm::mloConstructFwd()
     assert(_out_pix_tile0 - 1 <= _norm_area && _out_pix_tile1 - 1 <= _norm_area);
 
     auto ocl_group_lg2sz0 =
-        static_cast<int>(ceil(log(static_cast<double>(_out_pix_tile0)) / LN2));
+        static_cast<int>(ceil(log(static_cast<double>(_out_pix_tile0)) / M_LN2));
     auto ocl_group_lg2sz1 =
-        static_cast<int>(ceil(log(static_cast<double>(_out_pix_tile1)) / LN2));
+        static_cast<int>(ceil(log(static_cast<double>(_out_pix_tile1)) / M_LN2));
 
     _kernel_file = "MIOpenLRNFwd.cl";
     _kernel_name = (_norm_region == MLO_LRN_ACROSS_CHANNELS) ? "MIOpenLRNAcrossChannels4"
@@ -290,9 +290,9 @@ int mlo_construct_norm::mloConstructBwd()
         _out_pix_tile1 = (_in_df_height <= 8) ? 1 : (_in_df_height <= 16) ? 2 : 4;
     }
     auto ocl_group_lg2sz0 =
-        static_cast<int>(ceil(log(static_cast<double>(_grp_tile0)) / LN2));
+        static_cast<int>(ceil(log(static_cast<double>(_grp_tile0)) / M_LN2));
     auto ocl_group_lg2sz1 =
-        static_cast<int>(ceil(log(static_cast<double>(_grp_tile1)) / LN2));
+        static_cast<int>(ceil(log(static_cast<double>(_grp_tile1)) / M_LN2));
 
     int pre_pad              = (_norm_area - 1) / 2;
     int pad                  = _norm_area - pre_pad - 1;

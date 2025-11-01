@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2017 Advanced Micro Devices, Inc.
+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -103,11 +103,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <cstdint>
 #include <tuple>
 
-constexpr double LN2 = 0.693147180559945309417;
-
 inline int mloLg2(int v)
 {
-    auto ret = static_cast<int>(std::ceil(std::log(v) / LN2));
+    auto ret = static_cast<int>(std::ceil(std::log(v) / M_LN2));
     return (ret);
 }
 
