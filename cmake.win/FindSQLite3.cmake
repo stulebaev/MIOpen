@@ -32,7 +32,7 @@ This module will set the following variables if found:
 set(_SQLite3_PATH ${PROJECT_SOURCE_DIR})
 
 # Look for the necessary header
-find_path(SQLite3_INCLUDE_DIR NAMES sqlite3.h PATHS ${_SQLite3_PATH} PATH_SUFFIXES include)
+find_path(SQLite3_INCLUDE_DIR NAMES sqlite3.h PATHS ${_SQLite3_PATH} PATH_SUFFIXES include.win)
 mark_as_advanced(SQLite3_INCLUDE_DIR)
 
 # Extract version information from the header file

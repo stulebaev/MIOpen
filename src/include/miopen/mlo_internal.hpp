@@ -102,11 +102,12 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <numeric>
 #include <cstdint>
 #include <tuple>
-#include <numbers>
+
+constexpr double LN2 = 0.693147180559945309417;
 
 inline int mloLg2(int v)
 {
-    auto ret = static_cast<int>(std::ceil(std::log(v) / std::numbers::ln2));
+    auto ret = static_cast<int>(std::ceil(std::log(v) / LN2));
     return (ret);
 }
 

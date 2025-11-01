@@ -1,2 +1,2 @@
-If you get warning "GIT LFS files not pulled down, skipped: ..." then execute command
+If you get warning "GIT LFS files not pulled down, skipped:..." then execute command
 git lfs pull --exclude=

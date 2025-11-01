@@ -35,7 +35,7 @@ The following cache variables may also be set:
 
 set(_BZIP2_PATH ${PROJECT_SOURCE_DIR})
 
-find_path(BZIP2_INCLUDE_DIR bzlib.h PATHS ${_BZIP2_PATH} PATH_SUFFIXES include)
+find_path(BZIP2_INCLUDE_DIR bzlib.h PATHS ${_BZIP2_PATH} PATH_SUFFIXES include.win)
 mark_as_advanced(BZIP2_INCLUDE_DIR)
 
 if(BZIP2_INCLUDE_DIR AND EXISTS "${BZIP2_INCLUDE_DIR}/bzlib.h")

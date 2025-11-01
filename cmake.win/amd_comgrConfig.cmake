@@ -1,6 +1,6 @@
 # Find amd_comgr
 
-find_path(AMD_COMGR_INCLUDE_DIR amd_comgr.h PATHS ${PROJECT_SOURCE_DIR} PATH_SUFFIXES include/amd_comgr)
+find_path(AMD_COMGR_INCLUDE_DIR amd_comgr.h PATHS ${PROJECT_SOURCE_DIR} PATH_SUFFIXES include.win/amd_comgr)
 mark_as_advanced(AMD_COMGR_INCLUDE_DIR)
 
 if(AMD_COMGR_INCLUDE_DIR)

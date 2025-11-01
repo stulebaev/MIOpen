@@ -80,7 +80,7 @@ if(WIN32)
 endif()
 include(rocm-path)
 
-project( MIOpen CXX )
+project(MIOpen CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
