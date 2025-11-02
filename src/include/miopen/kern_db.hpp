@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,12 +34,11 @@
 #include <miopen/bz2.hpp>
 #include <miopen/md5.hpp>
 
-#include <boost/core/explicit_operator_bool.hpp>
-#include <boost/none.hpp>
-#include <boost/optional/optional.hpp>
-
-#include <functional>
 #include <string>
+#include <vector>
+#include <sstream>
+#include <functional>
+#include <optional>
 
 namespace miopen {
 struct KernelConfig
@@ -112,10 +111,10 @@ public:
     }
 
     template <typename T>
-    boost::optional<std::vector<char>> FindRecordUnsafe(const T& problem_config)
+    std::optional<std::vector<char>> FindRecordUnsafe(const T& problem_config)
     {
         if(filename.empty())
-            return boost::none;
+            return std::nullopt;
         // Where clause with inserted values defeats the purpose of a prepraed statement
         auto select_query = "SELECT kernel_blob, kernel_hash, uncompressed_size FROM " +
                             T::table_name() + " WHERE " + problem_config.Where() + ";";
@@ -140,13 +139,13 @@ public:
         }
         else if(rc == SQLITE_DONE)
         {
-            return boost::none;
+            return std::nullopt;
         }
         else
         {
             MIOPEN_THROW(miopenStatusInternalError, sql.ErrorMessage());
         }
-        return boost::none;
+        return std::nullopt;
     }
 
     template <typename T>

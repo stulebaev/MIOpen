@@ -25,6 +25,7 @@
  *******************************************************************************/
 
 #include <miopen/conv/heuristics/ai_heuristics.hpp>
+
 #if MIOPEN_ENABLE_AI_IMMED_MODE_FALLBACK || MIOPEN_ENABLE_AI_KERNEL_TUNING
 #include <fdeep/fdeep.hpp>
 #include <miopen/filesystem.hpp>
@@ -517,8 +518,8 @@ std::vector<uint64_t> PredictSolver(const conv::ProblemDescription& problem,
         MIOPEN_LOG_I2("Cached heuristic (TunaNet) result found");
         std::vector<uint64_t> db_sol(db_res->size());
         // cast returned record to solver ids
-        std::transform(db_res->begin(), db_res->end(), db_sol.begin(), [](boost::any id) {
-            return boost::any_cast<uint64_t>(id);
+        std::transform(db_res->begin(), db_res->end(), db_sol.begin(), [](std::any id) {
+            return std::any_cast<uint64_t>(id);
         });
         if(miopen::IsLogging(LoggingLevel::Info2))
         {
@@ -548,7 +549,7 @@ std::vector<uint64_t> PredictSolver(const conv::ProblemDescription& problem,
 
     // map solver idx to solver id and then to anysolver
     std::vector<uint64_t> sol;
-    std::vector<boost::any> any_sol;
+    std::vector<std::any> any_sol;
     for(const auto& kinder : sort_res)
     {
         const auto id     = kinder.first; // index of solver in probability vector

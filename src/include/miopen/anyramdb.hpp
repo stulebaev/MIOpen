@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2023 Advanced Micro Devices, Inc.
+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,16 +26,15 @@
 #pragma once
 
 #include <miopen/db.hpp>
-#include <miopen/db_record.hpp>
 #include <miopen/lock_file.hpp>
 
-#include <boost/optional.hpp>
-#include <boost/any.hpp>
-
-#include <chrono>
-#include <map>
+#include <vector>
+#include <any>
+#include <optional>
 #include <string>
 #include <sstream>
+#include <map>
+#include <chrono>
 
 namespace miopen {
 
@@ -43,7 +42,7 @@ class LockFile;
 
 struct MIOPEN_INTERNALS_EXPORT AnyRamDb
 {
-    using TRecord = std::vector<boost::any>;
+    using TRecord = std::vector<std::any>;
 
 public:
     AnyRamDb(const fs::path& filename_)
@@ -56,12 +55,12 @@ public:
 
     static AnyRamDb& GetCached(const fs::path& path);
 
-    boost::optional<AnyRamDb::TRecord> FindRecord(const std::string& problem);
+    std::optional<AnyRamDb::TRecord> FindRecord(const std::string& problem);
     bool RemoveRecord(const std::string& key);
     bool StoreRecord(const std::string& problem, TRecord& record);
 
     template <class TProblem>
-    boost::optional<TRecord> FindRecord(const TProblem& problem)
+    std::optional<TRecord> FindRecord(const TProblem& problem)
     {
         std::stringstream ss;
         problem.Serialize(ss);
@@ -87,10 +86,10 @@ public:
     }
 
 private:
-    std::map<std::string, std::vector<boost::any>> cache;
+    std::map<std::string, std::vector<std::any>> cache;
     fs::path filename;
     LockFile& lock_file;
-    boost::optional<TRecord> FindRecordUnsafe(const std::string& problem);
+    std::optional<TRecord> FindRecordUnsafe(const std::string& problem);
     void UpdateCacheEntryUnsafe(const std::string& key, const TRecord& value);
 };
 

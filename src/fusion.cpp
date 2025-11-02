@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2022 Advanced Micro Devices, Inc.
+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,10 +40,8 @@
 #include <miopen/find_solution.hpp>
 #include <miopen/conv/solver_finders.hpp>
 #include <miopen/driver_arguments.hpp>
-#include <miopen/config.hpp>
 
 #include <ostream>
-#include <ios>
 #include <algorithm>
 #include <string>
 #include <half/half.hpp>
@@ -997,7 +995,7 @@ miopenStatus_t FusionPlanDescriptor::Compile(const Handle& handle)
 
     {
         FindMode findMode(solver::Primitive::Fusion);
-        auto sol = boost::optional<miopenConvSolution_t>{};
+        auto sol = std::optional<miopenConvSolution_t>{};
 
         if(findMode.IsFast(fusion_problem) || findMode.IsHybrid(fusion_problem))
         {

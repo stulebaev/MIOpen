@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2019 Advanced Micro Devices, Inc.
+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,15 +39,18 @@
 #include <miopen/lock_file.hpp>
 #include <miopen/env.hpp>
 
-#include <boost/core/explicit_operator_bool.hpp>
-#include <boost/none.hpp>
-#include <boost/optional/optional.hpp>
 #include "sqlite3.h"
-#include <mutex>
 
 #include <string>
-#include <chrono>
+#include <tuple>
+#include <sstream>
+#include <memory>
 #include <unordered_map>
+#include <functional>
+#include <algorithm>
+#include <mutex>
+#include <map>
+#include <optional>
 
 MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_DEBUG_DISABLE_SQL_WAL)
 MIOPEN_DECLARE_ENV_VAR_STR(MIOPEN_DEBUG_PERFDB_OVERRIDE)
@@ -437,10 +440,10 @@ public:
         }
     }
     template <typename T>
-    inline boost::optional<DbRecord> FindRecordUnsafe(const T& problem_config)
+    inline std::optional<DbRecord> FindRecordUnsafe(const T& problem_config)
     {
         if(dbInvalid)
-            return boost::none;
+            return std::nullopt;
 
         const auto& pdb_ovr = env::value(MIOPEN_DEBUG_PERFDB_OVERRIDE);
         if(!pdb_ovr.empty())
@@ -496,7 +499,7 @@ public:
             }
         }
         if(rec.GetSize() == 0)
-            return boost::none;
+            return std::nullopt;
         else
             return {rec};
     }
@@ -536,13 +539,13 @@ public:
     }
 
     /// Updates record under key PROBLEM_CONFIG with data ID:VALUES in database.
-    /// Returns updated record or boost::none if insertion failed
+    /// Returns updated record or std::nullopt if insertion failed
     template <class T, class V>
-    inline boost::optional<DbRecord>
+    inline std::optional<DbRecord>
     UpdateUnsafe(const T& problem_config, const std::string& id, const V& values)
     {
         if(dbInvalid)
-            return boost::none;
+            return std::nullopt;
         // UPSERT the value
         {
             std::string clause;
@@ -583,7 +586,7 @@ public:
             {
                 MIOPEN_LOG_E("Failed to insert performance record in the database: " +
                              sql.ErrorMessage());
-                return boost::none;
+                return std::nullopt;
             }
         }
         DbRecord record;

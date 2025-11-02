@@ -54,11 +54,13 @@
 #include <miopen/conv/wrw_invoke_params.hpp>
 #include <miopen/conv/heuristics/ai_heuristics.hpp>
 
-#include <cassert>
+#include <algorithm>
+#include <utility>
+#include <optional>
+#include <fstream>
+#include <ostream>
 #include <functional>
-#include <type_traits>
-
-#include <boost/range/adaptors.hpp>
+#include <tuple>
 
 MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_DEBUG_CONV_IMMED_FALLBACK)
 MIOPEN_DECLARE_ENV_VAR_STR(MIOPEN_DUMP_TENSOR_PATH)
@@ -147,7 +149,7 @@ std::vector<Solution> FindConvolution(const ExecutionContext& ctx,
                                       bool force_attach_binary)
 {
     auto results         = std::vector<Solution>{};
-    auto sol             = boost::optional<miopenConvSolution_t>{};
+    auto sol             = std::optional<miopenConvSolution_t>{};
     const auto& conv     = problem.GetConv();
     const auto& findMode = conv.findMode;
 

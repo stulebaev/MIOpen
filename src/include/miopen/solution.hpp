@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2022 Advanced Micro Devices, Inc.
+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,8 +38,6 @@
 
 #include <nlohmann/json_fwd.hpp>
 
-#include <boost/optional.hpp>
-
 #include <optional>
 #include <unordered_map>
 
@@ -71,7 +69,7 @@ struct MIOPEN_INTERNALS_EXPORT Solution : miopenSolution
 
     struct RunInput
     {
-        boost::optional<TensorDescriptor> descriptor;
+        std::optional<TensorDescriptor> descriptor;
         Data_t buffer = nullptr;
 
         inline RunInput() = default;

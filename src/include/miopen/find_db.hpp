@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2019 Advanced Micro Devices, Inc.
+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,10 +38,9 @@
 #include <miopen/solution.hpp>
 #include <miopen/conv/solver_finders.hpp>
 
-#include <boost/optional.hpp>
-
-#include <functional>
-#include <vector>
+#include <optional>
+#include <type_traits>
+#include <utility>
 
 MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_DEBUG_DISABLE_FIND_DB)
 
@@ -70,7 +69,7 @@ namespace debug {
 // For unit tests.
 MIOPEN_EXPORT extern bool
     testing_find_db_enabled; // NOLINT (cppcoreguidelines-avoid-non-const-global-variables)
-MIOPEN_EXPORT extern boost::optional<fs::path>&
+MIOPEN_EXPORT extern std::optional<fs::path>&
 testing_find_db_path_override(); /// \todo Remove when #1723 is resolved.
 
 } // namespace debug
@@ -99,15 +98,15 @@ public:
           installed_path(debug::testing_find_db_path_override()
                              ? *debug::testing_find_db_path_override()
                              : GetInstalledPath(handle, path_suffix)),
-          db(boost::make_optional<DbTimer<TDb>>(
-              debug::testing_find_db_enabled && !env::enabled(MIOPEN_DEBUG_DISABLE_FIND_DB),
-              DbTimer<TDb>{DbKinds::FindDb, installed_path, path}))
+          db(construct_db(debug::testing_find_db_enabled &&
+                          !env::enabled(MIOPEN_DEBUG_DISABLE_FIND_DB),
+                          DbTimer<TDb>{DbKinds::FindDb, installed_path, path}))
     {
-        if(!db.is_initialized())
+        if(!db)
             return;
 
         content = db->FindRecord(problem);
-        in_sync = content.is_initialized();
+        in_sync = content.has_value();
     }
 
     template <class TProblemDescription, class TTestDb = TDb>
@@ -118,33 +117,33 @@ public:
         : path(debug::testing_find_db_path_override() ? *debug::testing_find_db_path_override()
                                                       : GetUserPath(handle, path_suffix)),
 #if MIOPEN_DISABLE_USERDB
-          db(boost::optional<DbTimer<TDb>>{DbKinds::FindDb})
+          db(std::optional<DbTimer<TDb>>{DbKinds::FindDb})
 #else
-          db(boost::make_optional<DbTimer<TDb>>(debug::testing_find_db_enabled &&
-                                                    !env::enabled(MIOPEN_DEBUG_DISABLE_FIND_DB),
-                                                DbTimer<TDb>{DbKinds::FindDb, path, false}))
+          db(construct_db(debug::testing_find_db_enabled &&
+                          !env::enabled(MIOPEN_DEBUG_DISABLE_FIND_DB),
+                          DbTimer<TDb>{DbKinds::FindDb, path, false}))
 #endif
     {
-        if(!db.is_initialized())
+        if(!db)
             return;
 
         content = db->FindRecord(problem);
-        in_sync = content.is_initialized();
+        in_sync = content.has_value();
     }
 
     ~FindDbRecord_t()
     {
-        if(dont_store || !db.is_initialized() || !content.is_initialized() || in_sync)
+        if(dont_store || !db || !content || in_sync)
             return;
-        if(!db->StoreRecord(content.get()))
+        if(!db->StoreRecord(content.value()))
             MIOPEN_LOG_E("Failed to store record to find-db at <" << path << ">");
     }
 
-    auto begin() const { return content->As<FindDbData>().begin(); }
-    auto begin() { return content->As<FindDbData>().begin(); }
-    auto end() const { return content->As<FindDbData>().end(); }
-    auto end() { return content->As<FindDbData>().end(); }
-    bool empty() const { return !content.is_initialized(); }
+    auto begin() const { return content.value().As<FindDbData>().begin(); }
+    auto begin() { return content.value().As<FindDbData>().begin(); }
+    auto end() const { return content.value().As<FindDbData>().end(); }
+    auto end() { return content.value().As<FindDbData>().end(); }
+    bool empty() const { return !content.has_value(); }
 
     template <class TProblemDescription>
     static std::vector<Solution> TryLoad(const Handle& handle,
@@ -187,10 +186,18 @@ public:
 private:
     fs::path path;
     fs::path installed_path;
-    boost::optional<DbTimer<TDb>> db;
-    boost::optional<DbRecord> content{boost::none};
+    std::optional<DbTimer<TDb>> db;
+    std::optional<DbRecord> content;
     bool in_sync    = false;
     bool dont_store = false; // E.g. to skip writing sub-optimal find-db records to disk.
+
+    inline std::optional<DbTimer<TDb>> construct_db(bool cond, DbTimer<TDb>&& timer)
+    {
+        if(cond)
+            return std::optional<DbTimer<TDb>>(std::move(timer));
+        else
+            return std::nullopt;
+    }
 
     static fs::path GetInstalledPath(const Handle& handle, const std::string& path_suffix);
     static fs::path GetInstalledPathEmbed(const Handle& handle, const std::string& path_suffix);

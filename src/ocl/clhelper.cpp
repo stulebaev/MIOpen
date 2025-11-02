@@ -38,11 +38,9 @@
 #include <miopen/write_file.hpp>
 #include <miopen/env.hpp>
 
-#include <cstdio>
-#include <cstring>
-#include <fstream>
 #include <string>
 #include <vector>
+#include <optional>
 
 MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_DEBUG_OPENCL_WAVE64_NOWGP)
 
@@ -167,7 +165,7 @@ ClProgramPtr LoadProgram(cl_context ctx,
 
     if(program_name.extension() == ".cpp")
     {
-        boost::optional<miopen::TmpDir> dir(program_name);
+        std::optional<miopen::TmpDir> dir(program_name);
 #if MIOPEN_BUILD_DEV && !MIOPEN_WORKAROUND_COMPILER_CHANGE
         params += " -Werror";
         params += HipKernelWarningsString();

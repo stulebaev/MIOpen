@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2017 Advanced Micro Devices, Inc.
+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,11 +39,14 @@
 #include <miopen/write_file.hpp>
 #include <miopen/env.hpp>
 #include <miopen/comgr.hpp>
-#include <boost/optional.hpp>
 
-#include <cstring>
+#include <string>
+#include <string_view>
+#include <tuple>
 #include <mutex>
-#include <sstream>
+#include <memory>
+#include <optional>
+#include <utility>
 
 #if defined(__linux__)
 #include <unistd.h>
@@ -391,7 +394,7 @@ void HIPOCProgram::AttachBinary(std::vector<char> binary) { impl->binary = std::
 void HIPOCProgram::AttachBinary(fs::path binary)
 {
     if(impl->hsaco_file != binary)
-        impl->dir = boost::none;
+        impl->dir = std::nullopt;
     impl->hsaco_file = std::move(binary);
 }
 

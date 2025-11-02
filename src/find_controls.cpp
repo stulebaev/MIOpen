@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2017 Advanced Micro Devices, Inc.
+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,8 +32,6 @@
 #include <miopen/execution_context.hpp>
 #include <miopen/solver_id.hpp>
 #include <miopen/stringutils.hpp>
-
-#include <boost/optional.hpp>
 
 #include <ostream>
 #include <cstdlib>
@@ -107,7 +105,7 @@ FindEnforceAction GetFindEnforceActionImpl()
     return FindEnforceAction::Default_;
 }
 
-boost::optional<std::vector<solver::Id>> GetEnvFindOnlySolverImpl()
+std::optional<std::vector<solver::Id>> GetEnvFindOnlySolverImpl()
 {
     static_assert(miopen::solver::Id::invalid_value == 0, "miopen::solver::Id::invalid_value == 0");
     const auto slv_str = env::value(MIOPEN_DEBUG_FIND_ONLY_SOLVER);
@@ -149,7 +147,7 @@ boost::optional<std::vector<solver::Id>> GetEnvFindOnlySolverImpl()
         }
     }
     if(res.empty())
-        return boost::none;
+        return std::nullopt;
     else
         return {res};
 }
@@ -163,10 +161,10 @@ std::ostream& operator<<(std::ostream& os, const FindEnforce& val)
     return os << ToCString(val.action) << '(' << static_cast<int>(val.action) << ')';
 }
 
-boost::optional<std::vector<solver::Id>> GetEnvFindOnlySolver()
+std::optional<std::vector<solver::Id>> GetEnvFindOnlySolver()
 {
     if(miopen::debug::IsWarmupOngoing)
-        return boost::none;
+        return std::nullopt;
     static const auto once = GetEnvFindOnlySolverImpl();
     return once;
 }

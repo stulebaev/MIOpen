@@ -8,7 +8,11 @@
 #include <miopen/fusion.hpp>
 #include <miopen/search_options.hpp>
 
-#include <boost/optional.hpp>
+#include <string>
+#include <utility>
+#include <memory>
+#include <functional>
+#include <optional>
 
 namespace miopen {
 

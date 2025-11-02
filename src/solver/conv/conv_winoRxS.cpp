@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2023 Advanced Micro Devices, Inc.
+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,9 +38,7 @@
 #include <miopen/sequences.hpp>
 #include <miopen/stringutils.hpp>
 
-#include <boost/any.hpp>
-#include <boost/optional.hpp>
-
+#include <optional>
 #include <tuple>
 
 // ConvBinWinoRxS<2,3> is intended to handle group convolutions, but
@@ -779,7 +777,7 @@ bool ConvBinWinoRxS<Winodata, Winofilter>::IsApplicable(const ExecutionContext& 
 }
 
 template <int Winodata, int Winofilter>
-static inline boost::optional<PerformanceConfigConvBinWinogradRxS>
+static inline std::optional<PerformanceConfigConvBinWinogradRxS>
 GetPerfConfFromEnv(const ExecutionContext& ctx)
 {
     PerformanceConfigConvBinWinogradRxS fromEnv;
@@ -803,7 +801,7 @@ GetPerfConfFromEnv(const ExecutionContext& ctx)
     if(!fromEnv.Deserialize(s) || !fromEnv.IsValid(ctx))
     {
         MIOPEN_LOG_E(env_name << "Tuning config: Bad value or invalid format: `" << s << '\'');
-        return boost::none;
+        return std::nullopt;
     }
 
     MIOPEN_LOG_I("Overridden from env: " << fromEnv.ToString());

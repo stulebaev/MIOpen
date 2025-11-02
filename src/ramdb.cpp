@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2020 Advanced Micro Devices, Inc.
+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -116,7 +116,7 @@ RamDb& RamDb::GetCached(DbKinds db_kind_, const fs::path& path, bool is_system)
     return instance;
 }
 
-boost::optional<DbRecord> RamDb::FindRecord(const std::string& problem)
+std::optional<DbRecord> RamDb::FindRecord(const std::string& problem)
 {
     const auto lock = exclusive_lock(GetLockFile(), GetLockTimeout());
     MIOPEN_VALIDATE_LOCK(lock);
@@ -254,13 +254,13 @@ bool RamDb::Remove(const std::string& key, const std::string& id)
     return true;
 }
 
-boost::optional<miopen::DbRecord> RamDb::FindRecordUnsafe(const std::string& problem)
+std::optional<miopen::DbRecord> RamDb::FindRecordUnsafe(const std::string& problem)
 {
     MIOPEN_LOG_I2("Looking for key " << problem << " in cache for file " << GetFileName());
     const auto it = cache.find(problem);
 
     if(it == cache.end())
-        return boost::none;
+        return std::nullopt;
 
     auto record = DbRecord{problem};
 
@@ -269,7 +269,7 @@ boost::optional<miopen::DbRecord> RamDb::FindRecordUnsafe(const std::string& pro
         MIOPEN_LOG_E("Error parsing payload under the key: "
                      << problem << " form file " << GetFileName() << "#" << it->second.line);
         MIOPEN_LOG_E("Contents: " << it->second.content);
-        return boost::none;
+        return std::nullopt;
     }
 
     return record;
