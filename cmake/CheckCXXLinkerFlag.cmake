@@ -51,7 +51,7 @@ set(check_cxx_linker_flag_patterns
         FAIL_REGEX "An invalid option .* appears on the command line" # Cray
 )
 
-include (CheckCXXSourceCompiles)
+include(CheckCXXSourceCompiles)
 
 function(check_cxx_linker_flag _flag _var)
     set (_source "int main() { return 0; }")

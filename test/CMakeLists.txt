@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2017 Advanced Micro Devices, Inc.
+# Copyright (c) 2025 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -57,12 +57,12 @@ option( MIOPEN_TEST_COMPOSABLEKERNEL "Test with composable_kernel library" ${MIO
 option( MIOPEN_TEST_DISCRETE "Build Discrete Test Binaries" ON )
 option( MIOPEN_TEST_DBSYNC "" OFF )
 option( MIOPEN_TEST_PERF "" OFF )
-option( MIOPEN_TEST_ENABLE_TEST_SQLITE_PERFDB "Enable the SQLite Perf DB test" OFF)
+option( MIOPEN_TEST_ENABLE_TEST_SQLITE_PERFDB "Enable the SQLite Perf DB test" OFF )
 
 if(NOT ENABLE_ASAN_PACKAGING AND MIOPEN_TEST_PERF)
-    set( CMAKE_INSTALL_TESTBINDIR "${DATA_INSTALL_DIR}/bin" )
+    set(CMAKE_INSTALL_TESTBINDIR "${DATA_INSTALL_DIR}/bin")
     set(test_perf.py ${CMAKE_INSTALL_TESTBINDIR}/test_perf.py)
-    install(FILES  test_perf.py
+    install(FILES test_perf.py
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
         DESTINATION ${CMAKE_INSTALL_TESTBINDIR})
 
@@ -82,9 +82,9 @@ if(NOT ENABLE_ASAN_PACKAGING AND MIOPEN_TEST_PERF)
 endif()
 
 set_var_to_condition(MIOPEN_TEST_WITH_MIOPENDRIVER_DEFAULT MIOPEN_BUILD_DRIVER)
-option( MIOPEN_TEST_WITH_MIOPENDRIVER "Use MIOpenDriver in tests" ${MIOPEN_TEST_WITH_MIOPENDRIVER_DEFAULT})
+option(MIOPEN_TEST_WITH_MIOPENDRIVER "Use MIOpenDriver in tests" ${MIOPEN_TEST_WITH_MIOPENDRIVER_DEFAULT})
 
-option( WORKAROUND_ISSUE_936 "" ON)
+option(WORKAROUND_ISSUE_936 "" ON)
 
 # Run the test suite to a depth limit
 #limit greater than 2 leads to prolonged testing more than 5hrs per stage.
@@ -848,12 +848,16 @@ add_custom_test(conv_transposed_wrw_find_2
     COMMAND $<TARGET_FILE:test_conv2d_find2> ${TEST_CONV_VERBOSE_W} --input 64 64  28 28 --weights 64  64  1 1 --pads_strides_dilations 0 0 1 1 1 1 --cmode transpose ${MIOPEN_TEST_FLAGS_ARGS}
 )
 
+if(WIN32)
+  add_definitions(-D_USE_MATH_DEFINES -Wno-nvcc-compat -Wno-bit-int-extension)
+endif()
+
 #Don't install the tests if we are building each test separately
 #When the tests are built as a single unit, then we want to be
 #able to package them
 set(INSTALL_GTEST OFF)
 if(MIOPEN_TEST_DISCRETE)
-add_subdirectory(gtest EXCLUDE_FROM_ALL)
+  add_subdirectory(gtest EXCLUDE_FROM_ALL)
 else()
-add_subdirectory(gtest)
+  add_subdirectory(gtest)
 endif()

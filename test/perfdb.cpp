@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2017 Advanced Micro Devices, Inc.
+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,19 +36,19 @@
 #include <miopen/readonlyramdb.hpp>
 #include <miopen/temp_file.hpp>
 
-#include <boost/optional.hpp>
-
-#include <array>
-#include <cstdio>
-#include <cstdlib>
-#include <fstream>
-#include <mutex>
-#include <limits>
-#include <random>
-#include <shared_mutex>
-#include <string>
 #include <thread>
-#include <vector>
+#include <mutex>
+#include <shared_mutex>
+#include <type_traits>
+#include <random>
+#include <sstream>
+#include <fstream>
+#include <iostream>
+#include <array>
+#include <string>
+#include <cstdlib>
+#include <utility>
+#include <optional>
 
 namespace miopen {
 namespace tests {
@@ -73,14 +73,14 @@ static fs::path& exe_path()
     return exe_path;
 }
 
-static boost::optional<fs::path>& thread_logs_root()
+static std::optional<fs::path>& thread_logs_root()
 {
     // NOLINTNEXTLINE (cppcoreguidelines-avoid-non-const-global-variables)
     static std::mutex mutex;
     std::lock_guard<std::mutex> lock(mutex);
 
     // NOLINTNEXTLINE (cppcoreguidelines-avoid-non-const-global-variables)
-    static boost::optional<fs::path> path(boost::none);
+    static std::optional<fs::path> path{std::nullopt};
     return path;
 }
 
@@ -310,7 +310,7 @@ protected:
     static void ValidateSingleEntry(
         TKey key, const std::array<std::pair<const std::string, TValue>, count> values, TDb& db)
     {
-        boost::optional<DbRecord> record = db.FindRecord(key);
+        std::optional<DbRecord> record = db.FindRecord(key);
 
         EXPECT(record);
 

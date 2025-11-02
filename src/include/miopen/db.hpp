@@ -117,7 +117,7 @@ public:
         if(ok)
             return record;
         else
-            return boost::none;
+            return std::nullopt;
     }
 
     /// Searches for record with key PROBLEM_CONFIG and gets VALUES under the ID from it.

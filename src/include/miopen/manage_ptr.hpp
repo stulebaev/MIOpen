@@ -39,7 +39,7 @@ struct manage_deleter
     {
         if(x != nullptr)
         {
-            f(x); // NOLINT (cppcoreguidelines-owning-memory)
+            (void)f(x); // NOLINT (cppcoreguidelines-owning-memory)
         }
     }
 };

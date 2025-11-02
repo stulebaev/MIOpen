@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2017 Advanced Micro Devices, Inc.
+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,26 +31,39 @@
 #include "get_handle.hpp"
 #include "network_data.hpp"
 #include "serialize.hpp"
-#include "tensor_holder.hpp"
 #include "test.hpp"
 #include "verify.hpp"
 
-#include <functional>
-#include <deque>
-#include <half/half.hpp>
 #include <type_traits>
-#include <miopen/filesystem.hpp>
+#include <array>
+#include <numeric>
+#include <future>
+#include <functional>
+#include <vector>
+#include <string>
+#include <deque>
+#include <unordered_map>
+#include <utility>
+#include <initializer_list>
+#include <iostream>
+#include <sstream>
+#include <set>
+#include <algorithm>
+#include <stdexcept>
+#include <tuple>
+#include <iterator>
+#include <chrono>
+#include <cstdlib>
+
+#include <miopen/env.hpp>
+#include <miopen/md5.hpp>
+#include <miopen/rank.hpp>
+#include <miopen/type_name.hpp>
 #include <miopen/functional.hpp>
 #include <miopen/expanduser.hpp>
-#include <miopen/md5.hpp>
-#include <miopen/type_name.hpp>
-#include <miopen/env.hpp>
-#include <miopen/rank.hpp>
-#include <miopen/bfloat16.hpp>
+
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
-
-namespace env = miopen::env;
 
 template <class U, class T>
 constexpr std::is_same<T, U> is_same(const T&)
@@ -183,7 +196,10 @@ struct test_driver
         return arguments.at(argument_index.at(s));
     }
 
-    bool has_argument(const std::string& arg) const { return argument_index.contains(arg); }
+    inline bool has_argument(const std::string& arg) const
+    {
+        return (argument_index.count(arg) > 0);
+    }
 
     template <class Visitor>
     void parse(Visitor v)
@@ -1244,7 +1260,7 @@ void test_drive_impl_1(std::string program_name, std::vector<std::string> as)
         "--help", "-h", "--half", "--float", "--double", "--int8", "--bfloat16"};
     d.parse(keyword_set{keywords});
     auto arg_map = args::parse(as, [&](std::string x) {
-        return (keywords.contains(x)) or ((x.starts_with("--")) and d.has_argument(x.substr(2)));
+        return (keywords.count(x) > 0) or ((x.find("--") == 0) and d.has_argument(x.substr(2)));
     });
 
     if(arg_map.count("--half") > 0)

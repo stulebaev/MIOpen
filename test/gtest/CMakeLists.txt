@@ -22,9 +22,9 @@ if(MIOPEN_BACKEND_OPENCL)
   set(SKIP_TESTS dumpTensorTest.cpp)
 endif()
 
-#if(MIOPEN_USE_COMPOSABLEKERNEL)
-#  include_directories(${composable_kernel_DIR}/../../../include)
-#endif()
+if(MIOPEN_USE_COMPOSABLEKERNEL)
+  include_directories(${composable_kernel_DIR}/../../../include)
+endif()
 
 function(add_gtest_negative_filter NEGATIVE_FILTER_TO_ADD)
     set(TMP_FILTER ${MIOPEN_GTEST_FILTER_NEGATIVE})

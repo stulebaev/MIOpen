@@ -26,15 +26,20 @@
 
 #pragma once
 
-#include <algorithm>
 #include <gtest/gtest.h>
-#include <iostream>
-#include <iterator>
 #include <miopen/env.hpp>
+
+#include <optional>
+#include <string>
+#include <iostream>
+#include <type_traits>
+#include <string_view>
+#include <ostream>
+#include <map>
 #include <tuple>
 #include <sstream>
-#include <string>
-#include <vector>
+#include <iterator>
+#include <algorithm>
 
 #include "../driver.hpp"
 #include "../lib_env_var.hpp"
@@ -194,7 +199,7 @@ public:
 
     // Add additional methods here if needed
     const std::string& Name() const override;
-    boost::optional<bool> Xnack() const override;
+    std::optional<bool> Xnack() const override;
 
 private:
     std::string name;

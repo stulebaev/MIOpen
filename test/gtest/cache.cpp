@@ -28,8 +28,8 @@
 #include <miopen/bz2.hpp>
 #include <miopen/kern_db.hpp>
 #include <miopen/temp_file.hpp>
-#include <algorithm>
 #include <vector>
+#include <algorithm>
 #include "test.hpp"
 #include "random.hpp"
 
@@ -108,7 +108,7 @@ TEST(CPU_Cache_NONE, check_kern_db)
         EXPECT_TRUE(clean_db.StoreRecordUnsafe(cfg0));
         auto readout = clean_db.FindRecordUnsafe(cfg0);
         EXPECT_TRUE(readout);
-        EXPECT_TRUE(readout.get() == cfg0.kernel_blob);
+        EXPECT_TRUE(readout.value() == cfg0.kernel_blob);
         EXPECT_TRUE(clean_db.RemoveRecordUnsafe(cfg0));
         EXPECT_FALSE(clean_db.FindRecordUnsafe(cfg0));
     }

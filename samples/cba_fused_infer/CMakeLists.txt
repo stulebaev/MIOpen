@@ -27,19 +27,25 @@
 # if the number of samples grows, its likely better to organize them in subdirectories
 message(STATUS "Building MIOpen samples")
 cmake_minimum_required(VERSION 3.15)
-project(MIOpenSample LANGUAGES CXX HIP)
-set(CMAKE_INSTALL_PREFIX "/opt/rocm" CACHE PATH "")
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if(NOT WIN32)
+  set(HIP_PATH "/opt/rocm/hip" CACHE PATH "Path to HIP")
+endif()
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${HIP_PATH}/cmake)
+if(WIN32)
+  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake.win)
+  #list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake.win)
+endif()
+
+project(MIOpenSample LANGUAGES CXX HIP)
+
+set(CMAKE_INSTALL_PREFIX "/opt/rocm" CACHE PATH "")
 add_compile_definitions(__HIP_PLATFORM_AMD__)
 
-set(HIP_PATH "/opt/rocm/hip" CACHE PATH "Path to HIP")
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${HIP_PATH}/cmake)
-
-list(
-        APPEND
-        CMAKE_PREFIX_PATH
+list( APPEND CMAKE_PREFIX_PATH
         ${ROCM_PATH}/llvm
         ${ROCM_PATH}
         ${ROCM_PATH}/hip

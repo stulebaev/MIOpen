@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2024 Advanced Micro Devices, Inc.
+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,9 +40,9 @@ MockTargetProperties::MockTargetProperties(const TargetProperties& target_proper
 
 const std::string& MockTargetProperties::Name() const { return name; }
 
-boost::optional<bool> MockTargetProperties::Xnack() const
+std::optional<bool> MockTargetProperties::Xnack() const
 {
-    return xnack_disabled ? boost::none : TargetProperties::Xnack();
+    return xnack_disabled ? std::nullopt : TargetProperties::Xnack();
 }
 
 MockHandle::MockHandle(const DevDescription& dev_description, bool disable_xnack)
