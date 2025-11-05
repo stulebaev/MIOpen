@@ -1057,7 +1057,7 @@ void check_unparsed_args(Driver& d,
                 std::cerr << "    " << s << std::endl;
             std::abort();
         }
-        else if(!keywords.contains(p.first))
+        else if(keywords.count(p.first) == 0)
         {
             assert(p.first.length() > 2);
             auto name = p.first.substr(2);
