@@ -30,7 +30,6 @@
 #include <miopen/manage_ptr.hpp>
 #include <miopen/tmp_dir.hpp>
 #include <miopen/filesystem.hpp>
-#include <hip/hip_runtime_api.h>
 
 #include <vector>
 #include <string>

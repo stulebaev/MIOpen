@@ -28,20 +28,19 @@
 #include <miopen/tensor.hpp>
 #include <miopen/tensor_layout.hpp>
 #include <miopen/tensor_reorder_util.hpp>
-#include <miopen/general_tensor_reorder_sol.hpp>
 #include <miopen/invoker.hpp>
 #include <miopen/invoke_params.hpp>
-
-#include <vector>
-#include <iostream>
-#include <optional>
-#include <utility>
 
 #include "test.hpp"
 #include "driver.hpp"
 #include "random.hpp"
 #include "get_handle.hpp"
 #include "workspace.hpp"
+
+#include <vector>
+#include <iostream>
+#include <optional>
+#include <utility>
 
 template <typename T>
 void cpu_tensor_reorder(T* dst,
@@ -390,21 +389,25 @@ struct tensor_reorder_driver : tensor_reorder_base_driver
                 });
             std::vector<miopen::solver::KernelInfo> construction_params{
                 reorder_sol->GetKernelInfo()};
-            const auto invoker = handle.PrepareInvoker(*invoker_factory, construction_params);
-            // run gpu
-            invoker(handle, invoke_param);
-            // run cpu
-            cpu_reorder<T>::run(t_dst.data.data(),
-                                t_src.data.data(),
-                                dim_0,
-                                dim_1,
-                                dim_2,
-                                dim_3,
-                                order_0,
-                                order_1,
-                                order_2,
-                                order_3);
-            invoker_factory = std::nullopt;
+
+            if(invoker_factory.has_value())
+            {
+                const auto invoker = handle.PrepareInvoker(*invoker_factory, construction_params);
+                // run GPU
+                invoker(handle, invoke_param);
+                // run CPU
+                cpu_reorder<T>::run(t_dst.data.data(),
+                                    t_src.data.data(),
+                                    dim_0,
+                                    dim_1,
+                                    dim_2,
+                                    dim_3,
+                                    order_0,
+                                    order_1,
+                                    order_2,
+                                    order_3);
+            }
+            invoker_factory.reset();
 
             t_dst_gpu.data = wspace.Read<decltype(t_dst_gpu.data)>();
 

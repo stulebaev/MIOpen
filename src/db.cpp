@@ -149,7 +149,7 @@ std::optional<DbRecord> PlainTextDb::FindRecordUnsafe(const std::string& key,
                                    ? LoggingLevel::Warning
                                    : LoggingLevel::Info2;
         MIOPEN_LOG(log_level, "File is unreadable: " << filename);
-        return std::nullopt;
+        return {};
     }
 
     int n_line = 0;
@@ -207,7 +207,7 @@ std::optional<DbRecord> PlainTextDb::FindRecordUnsafe(const std::string& key,
         return record;
     }
     // Record was not found
-    return std::nullopt;
+    return {};
 }
 
 static void Copy(std::istream& from, std::ostream& to, std::streamoff count)

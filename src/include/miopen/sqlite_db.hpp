@@ -443,7 +443,7 @@ public:
     inline std::optional<DbRecord> FindRecordUnsafe(const T& problem_config)
     {
         if(dbInvalid)
-            return std::nullopt;
+            return {};
 
         const auto& pdb_ovr = env::value(MIOPEN_DEBUG_PERFDB_OVERRIDE);
         if(!pdb_ovr.empty())
@@ -499,7 +499,7 @@ public:
             }
         }
         if(rec.GetSize() == 0)
-            return std::nullopt;
+            return {};
         else
             return {rec};
     }
@@ -545,7 +545,7 @@ public:
     UpdateUnsafe(const T& problem_config, const std::string& id, const V& values)
     {
         if(dbInvalid)
-            return std::nullopt;
+            return {};
         // UPSERT the value
         {
             std::string clause;
@@ -586,7 +586,7 @@ public:
             {
                 MIOPEN_LOG_E("Failed to insert performance record in the database: " +
                              sql.ErrorMessage());
-                return std::nullopt;
+                return {};
             }
         }
         DbRecord record;

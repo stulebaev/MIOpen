@@ -28,6 +28,7 @@
 #include <charconv>
 #include <cstdlib>
 #include <memory>
+#include <optional>
 #include <type_traits>
 #include <unordered_map>
 
@@ -111,7 +112,7 @@ private:
         std::optional<std::string> Get() const override
         {
             if(!var)
-                return std::nullopt;
+                return {};
 
             const auto value = miopen::env::value(var);
 

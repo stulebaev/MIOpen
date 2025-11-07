@@ -38,8 +38,6 @@
 #include <miopen/miopen.h>
 #include <miopen/generic_search.hpp>
 #include <miopen/conv/invokers/impl_gemm.hpp>
-
-#include <boost/any.hpp>
 #include <miopen/conv/data_invoke_params.hpp>
 
 #if MIOPEN_BACKEND_HIP
@@ -193,7 +191,7 @@ static bool IsApplicableTransform(const ExecutionContext& ctx, const ProblemDesc
         return false;
 
     const auto& target = ctx.GetStream().GetTargetProperties();
-    if(target.Xnack() && *target.Xnack())
+    if(target.Xnack().value_or(true))
         return false;
 
     const std::string name = ctx.GetStream().GetDeviceName();

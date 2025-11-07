@@ -546,7 +546,7 @@ bool ConvAsm1x1U::IsApplicable(const ExecutionContext& ctx, const ProblemDescrip
         return false;
 
     const auto& target = ctx.GetStream().GetTargetProperties();
-    if(target.Xnack() && *target.Xnack())
+    if(target.Xnack().value_or(true))
         return false;
 
     const std::string name = ctx.GetStream().GetDeviceName();

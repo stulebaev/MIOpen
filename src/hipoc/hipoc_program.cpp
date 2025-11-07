@@ -394,7 +394,7 @@ void HIPOCProgram::AttachBinary(std::vector<char> binary) { impl->binary = std::
 void HIPOCProgram::AttachBinary(fs::path binary)
 {
     if(impl->hsaco_file != binary)
-        impl->dir = std::nullopt;
+        impl->dir.reset();
     impl->hsaco_file = std::move(binary);
 }
 

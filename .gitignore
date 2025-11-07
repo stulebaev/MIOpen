@@ -11,11 +11,8 @@
 
 # Compiled Dynamic libraries
 *.so
-*.dylib
 *.dll
-
-# Fortran module files
-*.mod
+*.dylib
 
 # Compiled Static libraries
 *.lai
@@ -35,8 +32,6 @@ tags
 
 # Editors
 .vscode
-
-# build-in-source directory
 
 # emacs temporary/backup files
 .\#*

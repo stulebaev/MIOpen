@@ -24,16 +24,17 @@
  *
  *******************************************************************************/
 #pragma once
-#include "random.hpp"
 
 #include <miopen/miopen.h>
 #include <miopen/solver_id.hpp>
 #include <miopen/batchnorm/problem_description.hpp>
-#include <serialize.hpp>
-#include <fusionHost.hpp>
+
+#include "../serialize.hpp"
+#include "../fusionHost.hpp"
 
 #include "tensor_util.hpp"
 #include "get_handle.hpp"
+#include "random.hpp"
 
 struct BN2DTestCase
 {

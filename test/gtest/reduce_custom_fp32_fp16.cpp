@@ -25,9 +25,8 @@
  *******************************************************************************/
 #include "../reduce_test.hpp"
 #include <miopen/miopen.h>
-#include <gtest/gtest_common.hpp>
-#include <gtest/gtest.h>
 #include "get_handle.hpp"
+#include "gtest_common.hpp"
 
 namespace reduce_custom_fp32_fp16 {
 std::vector<std::string> GetArgs(const std::string& param)

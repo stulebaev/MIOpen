@@ -25,9 +25,8 @@
  *******************************************************************************/
 #include "../reduce_test.hpp"
 #include <miopen/miopen.h>
-#include <gtest/gtest_common.hpp>
-#include <gtest/gtest.h>
 #include "get_handle.hpp"
+#include "gtest_common.hpp"
 
 // Recently added FP16, BFP16 and I8 test cases fail compiler staging tests
 #define WORKAROUND_ISSUE_3757 1

@@ -23,10 +23,9 @@
  * SOFTWARE.
  *
  *******************************************************************************/
-#include <gtest/gtest.h>
-#include <gtest/gtest_common.hpp>
 #include <miopen/miopen.h>
 
+#include "gtest_common.hpp"
 #include "tensor_holder.hpp"
 #include "get_handle.hpp"
 #include "cba.hpp"
@@ -65,7 +64,7 @@ public:
     miopen::Allocator::ManageDataPtr wei_dev2;
 };
 
-bool SkipTest() { return get_handle_xnack(); }
+inline bool SkipTest() { return get_handle_xnack(); }
 
 } // namespace
 
@@ -91,7 +90,7 @@ TEST_P(GPU_FusionSetArg_FP16, TestSetArgApiCall)
 
     auto&& handle = get_handle();
     auto convOp   = std::make_shared<miopen::ConvForwardOpDescriptor>(cba_float::conv_desc,
-                                                                    cba_float::weights.desc);
+                                                                      cba_float::weights.desc);
     miopenOperatorArgs_t fusion_args = static_cast<miopenOperatorArgs_t>(&(cba_float::params));
     miopenFusionPlanDescriptor_t fusion_plan =
         static_cast<miopenFusionPlanDescriptor_t>(&(cba_float::fusePlanDesc));

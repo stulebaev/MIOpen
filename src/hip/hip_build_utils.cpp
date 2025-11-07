@@ -34,7 +34,6 @@
 
 #include <string>
 #include <tuple>
-#include <algorithm>
 
 MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_DEBUG_HIP_VERBOSE)
 MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_DEBUG_HIP_DUMP)

@@ -37,9 +37,10 @@
 #include <miopen/fusion/fusion_invoke_params.hpp>
 #include <miopen/activ.hpp>
 
-#include <set>
 #include <vector>
-#include <unordered_map>
+#include <ostream>
+#include <sstream>
+#include <optional>
 
 namespace miopen {
 

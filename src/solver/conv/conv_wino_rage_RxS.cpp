@@ -85,7 +85,7 @@ bool ConvWinoRageRxSCommon<Winodata, Winofilter>::IsApplicable(const ExecutionCo
         return false;
 
     const auto& targetProperties = ctx.GetStream().GetTargetProperties();
-    if(targetProperties.Xnack() && *targetProperties.Xnack())
+    if(targetProperties.Xnack().value_or(true))
         return false;
 
     if(!(problem.GetKernelStrideH() == 1 && problem.GetKernelStrideW() == 1))

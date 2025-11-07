@@ -29,7 +29,6 @@
 
 #include <miopen/config.h>
 #include <miopen/db.hpp>
-#include <miopen/db_path.hpp>
 #include <miopen/db_record.hpp>
 #include <miopen/env.hpp>
 #include <miopen/perf_field.hpp>
@@ -93,10 +92,11 @@ public:
                    const TProblemDescription& problem,
                    const std::string& path_suffix = "",
                    is_immediate_t<TTestDb>        = 0)
-        : path(debug::testing_find_db_path_override() ? *debug::testing_find_db_path_override()
-                                                      : GetUserPath(handle, path_suffix)),
-          installed_path(debug::testing_find_db_path_override()
-                             ? *debug::testing_find_db_path_override()
+        : path(debug::testing_find_db_path_override().has_value()
+                   ? debug::testing_find_db_path_override().value()
+                   : GetUserPath(handle, path_suffix)),
+          installed_path(debug::testing_find_db_path_override().has_value()
+                             ? debug::testing_find_db_path_override().value()
                              : GetInstalledPath(handle, path_suffix)),
           db(construct_db(debug::testing_find_db_enabled &&
                           !env::enabled(MIOPEN_DEBUG_DISABLE_FIND_DB),
@@ -114,8 +114,9 @@ public:
                    const TProblemDescription& problem,
                    const std::string& path_suffix = "",
                    is_find_t<TTestDb>             = 0)
-        : path(debug::testing_find_db_path_override() ? *debug::testing_find_db_path_override()
-                                                      : GetUserPath(handle, path_suffix)),
+        : path(debug::testing_find_db_path_override().has_value()
+                   ? debug::testing_find_db_path_override().value()
+                   : GetUserPath(handle, path_suffix)),
 #if MIOPEN_DISABLE_USERDB
           db(std::optional<DbTimer<TDb>>{DbKinds::FindDb})
 #else
@@ -139,11 +140,13 @@ public:
             MIOPEN_LOG_E("Failed to store record to find-db at <" << path << ">");
     }
 
+    // NOLINTBEGIN (bugprone-unchecked-optional-access)
     auto begin() const { return content.value().As<FindDbData>().begin(); }
     auto begin() { return content.value().As<FindDbData>().begin(); }
     auto end() const { return content.value().As<FindDbData>().end(); }
     auto end() { return content.value().As<FindDbData>().end(); }
     bool empty() const { return !content.has_value(); }
+    // NOLINTEND (bugprone-unchecked-optional-access)
 
     template <class TProblemDescription>
     static std::vector<Solution> TryLoad(const Handle& handle,

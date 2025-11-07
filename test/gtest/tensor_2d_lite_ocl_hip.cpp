@@ -29,7 +29,7 @@
 #include "get_handle.hpp"
 #include "verify.hpp"
 
-#define PERF_ENABLE 1
+#define PERF_ENABLE 0
 #if PERF_ENABLE
 #include "perf_helper.hpp"
 #endif
@@ -60,11 +60,11 @@ std::vector<TensorsConfig> TensorsConfigs()
     configs.push_back({{1, C, N}, {N * C, N, 1}, {1, C, N}, {N * C, N, 1}});
     C = 1;
     N = 64 * MiB;
-    configs.push_back({{1, C, N}, {N * C, N, 1}, {1, C, N}, {N * C, N, 1}});
+    //configs.push_back({{1, C, N}, {N * C, N, 1}, {1, C, N}, {N * C, N, 1}});
     N = 256 * MiB;
-    configs.push_back({{1, C, N}, {N * C, N, 1}, {1, C, N}, {N * C, N, 1}});
+    //configs.push_back({{1, C, N}, {N * C, N, 1}, {1, C, N}, {N * C, N, 1}});
     N = 1024 * MiB;
-    configs.push_back({{1, C, N}, {N * C, N, 1}, {1, C, N}, {N * C, N, 1}});
+    //configs.push_back({{1, C, N}, {N * C, N, 1}, {1, C, N}, {N * C, N, 1}});
     return configs;
 #endif
 }

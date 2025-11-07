@@ -36,19 +36,15 @@
 #include <miopen/readonlyramdb.hpp>
 #include <miopen/temp_file.hpp>
 
-#include <thread>
+#include <optional>
 #include <mutex>
-#include <shared_mutex>
 #include <type_traits>
 #include <random>
 #include <sstream>
-#include <fstream>
-#include <iostream>
+#include <ostream>
+#include <ios>
 #include <array>
-#include <string>
-#include <cstdlib>
 #include <utility>
-#include <optional>
 
 namespace miopen {
 namespace tests {
@@ -80,7 +76,7 @@ static std::optional<fs::path>& thread_logs_root()
     std::lock_guard<std::mutex> lock(mutex);
 
     // NOLINTNEXTLINE (cppcoreguidelines-avoid-non-const-global-variables)
-    static std::optional<fs::path> path{std::nullopt};
+    static std::optional<fs::path> path;
     return path;
 }
 
@@ -709,11 +705,11 @@ private:
         std::ofstream log_err;
         std::streambuf *cout_buf = nullptr, *cerr_buf = nullptr;
 
-        if(thread_logs_root())
+        if(thread_logs_root().has_value())
         {
-            const auto out_path =
-                *thread_logs_root() / ("thread-" + std::to_string(id) + "_" + log_postfix + ".log");
-            const auto err_path = *thread_logs_root() /
+            const auto out_path = thread_logs_root().value() /
+                                  ("thread-" + std::to_string(id) + "_" + log_postfix + ".log");
+            const auto err_path = thread_logs_root().value() /
                                   ("thread-" + std::to_string(id) + "_" + log_postfix + "-err.log");
 
             fs::remove(out_path);
@@ -729,7 +725,7 @@ private:
 
         worker();
 
-        if(thread_logs_root())
+        if(thread_logs_root().has_value())
         {
             std::cout.rdbuf(cout_buf);
             std::cerr.rdbuf(cerr_buf);
@@ -994,9 +990,9 @@ public:
                                 " --" + ArgsHelper::path_arg + " " + temp_file.Path() +
                                 " --" + ArgsHelper::db_class_arg + " " + ArgsHelper::db_class::Get<TDb>();
 
-                if(thread_logs_root())
+                if(thread_logs_root().has_value())
                 {
-                    args += std::string{" --"} + ArgsHelper::logs_path_arg + " " + *thread_logs_root();
+                    args += std::string{" --"} + ArgsHelper::logs_path_arg + " " + thread_logs_root().value();
                 }
 
                 if(full_set())
@@ -1079,9 +1075,9 @@ public:
                                " --" + ArgsHelper::path_arg + " " + temp_file +
                                " --" + ArgsHelper::db_class_arg + " " + ArgsHelper::db_class::Get<TDb>();
 
-                if(thread_logs_root())
+                if(thread_logs_root().has_value())
                 {
-                    args += std::string{" --"} + ArgsHelper::logs_path_arg + " " + *thread_logs_root();
+                    args += std::string{" --"} + ArgsHelper::logs_path_arg + " " + thread_logs_root().value();
                 }
 
                 if(full_set())

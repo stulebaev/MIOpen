@@ -33,11 +33,11 @@
 #include <miopen/solver_id.hpp>
 #include <miopen/stringutils.hpp>
 
-#include <ostream>
 #include <cstdlib>
 #include <cstring>
-#include <string_view>
 #include <optional>
+#include <ostream>
+#include <string_view>
 
 MIOPEN_DECLARE_ENV_VAR_STR(MIOPEN_FIND_ENFORCE)
 MIOPEN_DECLARE_ENV_VAR_STR(MIOPEN_DEBUG_FIND_ONLY_SOLVER)
@@ -164,7 +164,7 @@ std::ostream& operator<<(std::ostream& os, const FindEnforce& val)
 std::optional<std::vector<solver::Id>> GetEnvFindOnlySolver()
 {
     if(miopen::debug::IsWarmupOngoing)
-        return std::nullopt;
+        return {};
     static const auto once = GetEnvFindOnlySolverImpl();
     return once;
 }

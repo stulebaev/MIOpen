@@ -26,7 +26,6 @@
 
 #include <miopen/convolution.hpp>
 
-#include <miopen/algorithm.hpp>
 #include <miopen/conv_algo_name.hpp>
 #include <miopen/conv/solver_finders.hpp>
 #include <miopen/check_numerics.hpp>
@@ -41,9 +40,7 @@
 #include <miopen/invoker.hpp>
 #include <miopen/kernel.hpp>
 #include <miopen/solution.hpp>
-#include <miopen/tensor_ops.hpp>
 #include <miopen/tensor.hpp>
-#include <miopen/util.hpp>
 #include <miopen/visit_float.hpp>
 #include <miopen/datatype.hpp>
 #include <miopen/any_solver.hpp>
@@ -94,7 +91,7 @@ static Invoker PrepareInvoker(ExecutionContext ctx,
     auto db           = MakeConvDbGetter(ctx);
     auto solution     = solver.FindSolution(ctx, problem, db, {}); // auto tune is not expected here
     auto& handle      = ctx.GetStream();
-    auto invoker = handle.PrepareInvoker(*solution.invoker_factory, solution.construction_params);
+    auto invoker = handle.PrepareInvoker(solution.invoker_factory.value(), solution.construction_params);
     const auto algo = AlgorithmName{solver_id.GetAlgo(problem.GetDirection())};
 
     handle.RegisterInvoker(invoker, config, solver_id.ToString(), algo);

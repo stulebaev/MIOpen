@@ -176,7 +176,7 @@ struct SolverBaseNonTunable : SolverInterfaceNonTunable<Context, Problem>
     InvokerFactory GetInvokerFactory(const Context& ctx, const Problem& problem) const
     {
         const auto solution = this->GetSolution(ctx, problem);
-        return *solution.invoker_factory;
+        return solution.invoker_factory.value_or(InvokerFactory{});
     }
 };
 
@@ -225,7 +225,7 @@ struct SolverBaseTunable : SolverInterfaceTunable<Context, Problem>, TunableSolv
                                      const Problem& problem,
                                      const PerformanceConfig& config) const
     {
-        return *GetSolution(ctx, problem, config).invoker_factory;
+        return GetSolution(ctx, problem, config).invoker_factory.value_or(InvokerFactory{});
     }
 };
 

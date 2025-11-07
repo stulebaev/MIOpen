@@ -23,13 +23,13 @@
  * SOFTWARE.
  *
  *******************************************************************************/
-#include <tuple>
+#include <sstream>
+#include <iterator>
 #include <miopen/miopen.h>
-#include <gtest/gtest.h>
-#include <gtest/gtest_common.hpp>
 #include "../conv2d.hpp"
 #include "get_handle.hpp"
 #include "lib_env_var.hpp"
+#include "gtest_common.hpp"
 
 namespace conv_igemm_dynamic_xdlops_nhwc_bf16 {
 
@@ -97,7 +97,7 @@ bool IsTestSupportedForDevice(const miopen::Handle& handle)
 {
     const auto& target  = handle.GetTargetProperties();
     std::string devName = handle.GetDeviceName();
-    if(target.Xnack() && *target.Xnack())
+    if(target.Xnack().value_or(true))
         return false;
 
     if(devName == "gfx90a" || devName == "gfx942")

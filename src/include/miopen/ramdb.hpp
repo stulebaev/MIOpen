@@ -117,11 +117,11 @@ public:
     {
         DbRecord record(db_kind, problem_config);
         record.SetValues(id, values);
-        const auto ok = UpdateRecord(record);
+        const bool ok = UpdateRecord(record);
         if(ok)
             return record;
         else
-            return std::nullopt;
+            return {};
     }
 
 private:

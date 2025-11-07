@@ -114,7 +114,7 @@ public:
     std::optional<std::vector<char>> FindRecordUnsafe(const T& problem_config)
     {
         if(filename.empty())
-            return std::nullopt;
+            return {};
         // Where clause with inserted values defeats the purpose of a prepraed statement
         auto select_query = "SELECT kernel_blob, kernel_hash, uncompressed_size FROM " +
                             T::table_name() + " WHERE " + problem_config.Where() + ";";
@@ -139,13 +139,13 @@ public:
         }
         else if(rc == SQLITE_DONE)
         {
-            return std::nullopt;
+            return {};
         }
         else
         {
             MIOPEN_THROW(miopenStatusInternalError, sql.ErrorMessage());
         }
-        return std::nullopt;
+        return {};
     }
 
     template <typename T>

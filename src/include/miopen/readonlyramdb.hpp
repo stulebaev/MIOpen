@@ -52,7 +52,7 @@ public:
         const auto it = cache.find(problem);
 
         if(it == cache.end())
-            return std::nullopt;
+            return {};
 
         auto record = DbRecord{problem};
 
@@ -64,7 +64,7 @@ public:
             MIOPEN_LOG_E("Error parsing payload under the key: "
                          << problem << " form file " << db_path << "#" << it->second.line);
             MIOPEN_LOG_E("Contents: " << it->second.content);
-            return std::nullopt;
+            return {};
         }
 
         return record;

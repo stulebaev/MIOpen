@@ -32,12 +32,12 @@
 
 #include <miopen/filesystem.hpp>
 
-#include <chrono>
-#include <ctime>
 #include <fstream>
-#include <limits>
-#include <map>
+#include <chrono>
 #include <mutex>
+#include <map>
+#include <memory>
+#include <optional>
 #include <sstream>
 
 namespace miopen {
@@ -260,7 +260,7 @@ std::optional<miopen::DbRecord> RamDb::FindRecordUnsafe(const std::string& probl
     const auto it = cache.find(problem);
 
     if(it == cache.end())
-        return std::nullopt;
+        return {};
 
     auto record = DbRecord{problem};
 
@@ -269,7 +269,7 @@ std::optional<miopen::DbRecord> RamDb::FindRecordUnsafe(const std::string& probl
         MIOPEN_LOG_E("Error parsing payload under the key: "
                      << problem << " form file " << GetFileName() << "#" << it->second.line);
         MIOPEN_LOG_E("Contents: " << it->second.content);
-        return std::nullopt;
+        return {};
     }
 
     return record;

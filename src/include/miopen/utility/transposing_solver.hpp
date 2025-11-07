@@ -475,7 +475,7 @@ struct TransposingSolver : Base
     {
         auto transposed_problem      = Transpose(problem);
         ConvSolution sln             = Inner{}.GetSolution(ctx, transposed_problem);
-        auto old_factory             = *sln.invoker_factory;
+        auto old_factory             = sln.invoker_factory.value();
         const auto old_kernels_end   = sln.construction_params.size();
         const auto transpose_solvers = Derived::GetTransposeSolversMap();
 

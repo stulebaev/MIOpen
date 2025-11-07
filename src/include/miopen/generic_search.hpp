@@ -39,15 +39,18 @@
 #include <miopen/generic_search_controls.hpp>
 #include <miopen/utility/modified_z.hpp>
 
+#include <optional>
+#include <iterator>
+#include <limits>
 #include <algorithm>
 #include <vector>
-#include <cstdlib>
-#include <limits>
-#include <iterator>
 #include <chrono>
-#include <cassert>
+#include <tuple>
+#include <utility>
 #include <random>
 #include <thread>
+#include <functional>
+#include <exception>
 
 namespace miopen {
 namespace solver {
@@ -507,20 +510,25 @@ auto GenericSearch(const Solver s,
                                      << " != " << current_solution.workspace_sz);
                 }
 
-                invoker = profile_h.PrepareInvoker(*current_solution.invoker_factory,
-                                                   current_solution.construction_params);
-
-                // Warm-up run for first time invoker is used
-                if(n_current == 0)
+                if(current_solution.invoker_factory.has_value())
                 {
+                    invoker = profile_h.PrepareInvoker(*current_solution.invoker_factory,
+                                                       current_solution.construction_params);
+
+                    // Warm-up run for every configuration to eliminate cold-start bias
                     invoker(profile_h, invoke_ctx);
                     profile_h.ResetKernelTime();
-                }
 
-                invoker(profile_h, invoke_ctx);
-                elapsed_time = profile_h.GetKernelTime();
-                samples.push_back(elapsed_time);
-                profile_h.ResetKernelTime();
+                    invoker(profile_h, invoke_ctx);
+                    elapsed_time = profile_h.GetKernelTime();
+                    samples.push_back(elapsed_time);
+                    profile_h.ResetKernelTime();
+                }
+                else
+                {
+                    MIOPEN_LOG_E("Error: solver returned a solution without invoker factory.");
+                    ret = 1;
+                }
             }
             catch(const std::exception& e)
             {
@@ -630,14 +638,21 @@ auto GenericSearch(const Solver s,
 
     if(!is_passed)
         MIOPEN_THROW("Search failed");
-    // Run once with the default config and show score.
 
-    const auto& invoker = profile_h.PrepareInvoker(*default_solution.invoker_factory,
-                                                   default_solution.construction_params);
-    invoker(profile_h, invoke_ctx);
-    const auto default_time = profile_h.GetKernelTime();
-    const auto score        = (best_time > 0.0f) ? default_time / best_time : 0.0f;
-    MIOPEN_LOG_I("...Score: " << score << " (default time " << default_time << ')');
+    if(default_solution.invoker_factory.has_value())
+    {
+        // Run once with the default config and show score.
+        const auto& invoker = profile_h.PrepareInvoker(*default_solution.invoker_factory,
+                                                       default_solution.construction_params);
+        invoker(profile_h, invoke_ctx);
+        const auto default_time = profile_h.GetKernelTime();
+        const auto score        = (best_time > 0.0f) ? default_time / best_time : 0.0f;
+        MIOPEN_LOG_I("...Score: " << score << " (default time " << default_time << ')');
+    }
+    else
+    {
+        MIOPEN_LOG_E("Error: default solution without invoker factory.");
+    }
 
     return best_config;
 }
