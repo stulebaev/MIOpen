@@ -34,10 +34,9 @@
 #include "random.hpp"
 #include "util_driver.hpp"
 
-#include <../test/verify.hpp>
+#include "../test/verify.hpp"
 
 #include <miopen/gemm_v2.hpp>
-#include <miopen/miopen.h>
 
 #include <algorithm>
 #include <cstdlib>

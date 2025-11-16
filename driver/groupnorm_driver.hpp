@@ -32,16 +32,17 @@
 #include "mloGroupNormHost.hpp"
 #include "tensor_driver.hpp"
 #include "timer.hpp"
-#include <../test/verify.hpp>
+#include "random.hpp"
+
 #include <algorithm>
 #include <cstdlib>
 #include <cfloat>
 #include <memory>
-#include <miopen/tensor.hpp>
 #include <numeric>
 #include <vector>
-#include <../test/tensor_holder.hpp>
-#include "random.hpp"
+
+#include "../test/verify.hpp"
+#include "../test/tensor_holder.hpp"
 
 template <typename Tgpu, typename Tref>
 class GroupNormDriver : public Driver

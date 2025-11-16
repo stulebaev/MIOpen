@@ -39,8 +39,8 @@
 #include <miopen/tensor.hpp>
 #include <numeric>
 #include <vector>
-#include <../test/tensor_holder.hpp>
-#include <../test/verify.hpp>
+#include "../test/tensor_holder.hpp"
+#include "../test/verify.hpp"
 
 #ifndef MLO_CATHOST_H_
 #define MLO_CATHOST_H_
