@@ -350,7 +350,7 @@ if(MIOPEN_BACKEND STREQUAL "HIP" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_BA
             endif()
             miopen_add_dependency(composable_kernel HASH ${COMPOSABLE_KERNEL_HASH} options NO_LOCAL)
         else()
-            find_package(composable_kernel 1.0.0 COMPONENTS device_conv_operations)
+            find_package(composable_kernel COMPONENTS device_conv_operations)
         endif()
     endif()
     if(MIOPEN_BACKEND STREQUAL "HIPNOGPU")
