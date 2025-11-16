@@ -30,12 +30,12 @@
 
 #include <algorithm>
 #include <iterator>
-#include <miopen/miopen.h>
+#include <numeric>
+#include <vector>
+
 #include <miopen/tensor.hpp>
 #include <miopen/tensor_extra.hpp>
 #include <miopen/tensor_layout.hpp>
-#include <numeric>
-#include <vector>
 
 inline miopenTensorLayout_t StringToLayoutType(std::string layout_str)
 {
