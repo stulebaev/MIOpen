@@ -54,7 +54,7 @@ function(add_gtest TEST_NAME TEST_CPP)
 
   target_link_libraries(${TEST_NAME} miopen_gtest_common)
   if(MIOPEN_ENABLE_AI_KERNEL_TUNING)
-    target_link_libraries(${TEST_NAME} frugally-deep::fdeep Eigen3::Eigen)
+    target_link_libraries(${TEST_NAME} frugally-deep::fdeep)
   endif()
 
   # Need to add hipblaslt since tests directly use gemm_v2.cpp

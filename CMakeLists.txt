@@ -25,7 +25,7 @@
 ################################################################################
 cmake_minimum_required(VERSION 3.15)
 
-if(POLICY CMP0074)
+if (POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif()
 
@@ -67,22 +67,13 @@ else()
 endif()
 
 # Default installation path
-if(WIN32)
-    set(CMAKE_INSTALL_PREFIX $ENV{HIP_PATH})
-else()
+if(NOT WIN32)
     set(CMAKE_INSTALL_PREFIX "/opt/rocm" CACHE PATH "")
 endif()
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-if(WIN32)
-    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake.win)
-    list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake.win)
-endif()
-include(rocm-path)
-
 project(MIOpen CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -94,9 +85,9 @@ include(ROCMPackageConfigHelpers)
 include(ROCMSetupVersion)
 include(ROCMInstallSymlinks)
 include(ROCMCreatePackage)
+include(CheckCXXCompilerFlag)
 include(ROCMHeaderWrapper)
 
-include(CheckCXXCompilerFlag)
 include(cmake/ClangCheck.cmake)
 
 # Build library with Beta APIs
@@ -111,6 +102,8 @@ set(MIOPEN_ENABLE_SQLITE_KERN_CACHE On CACHE BOOL "")
 # By default build shared libraries
 option(BUILD_SHARED_LIBS "Create shared libraries" ON)
 
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
 if(MIOPEN_ENABLE_SQLITE)
     # MIOpen now depends on SQLite as well
     find_package(SQLite3 REQUIRED)
@@ -124,6 +117,8 @@ set(MIOPEN_LOG_FUNC_TIME_ENABLE Off CACHE BOOL "")
 set(MIOPEN_ENABLE_SQLITE_BACKOFF On CACHE BOOL "")
 
 option(BUILD_DEV "Build for development only" OFF)
+option(MIOPEN_ENABLE_FIN "Enable the fin driver for MIOpen"  OFF)
+option(MIOPEN_ENABLE_FIN_INTERFACE "Enable internal interface for the fin" ${MIOPEN_ENABLE_FIN})
 option(MIOPEN_STRIP_SYMBOLS "Strip symbols in release mode" ON)
 
 option(MIOPEN_INCBIN "Include kernels using incbin" OFF)
@@ -158,12 +153,14 @@ else()
     set(MIOPEN_DEFAULT_BACKEND "OpenCL")
 endif()
 
+list(APPEND CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX} ${CMAKE_INSTALL_PREFIX}/llvm ${CMAKE_INSTALL_PREFIX}/hip)
+
 option(ENABLE_HIP_WORKAROUNDS Off)
 set(MIOPEN_INSTALL_CXX_HEADERS Off CACHE BOOL "Install MIOpen's C++ header interface")
 
 set_var_to_condition(MIOPEN_OFFLINE_COMPILER_PATHS_V2_DEFAULT FALSE)
 option(MIOPEN_OFFLINE_COMPILER_PATHS_V2 "Use rocm-core to find offline GPU compiler" ${MIOPEN_OFFLINE_COMPILER_PATHS_V2_DEFAULT})
-message(STATUS "MIOPEN_OFFLINE_COMPILER_PATHS_V2: ${MIOPEN_OFFLINE_COMPILER_PATHS_V2}")
+message( STATUS "MIOPEN_OFFLINE_COMPILER_PATHS_V2: ${MIOPEN_OFFLINE_COMPILER_PATHS_V2}" )
 
 # Embedded Build Configuration
 set(MIOPEN_EMBED_DB "" CACHE STRING "Semi-colon separated list of architecture to embed on-disk DBs in the binary. Example gfx906_60;gfx900_56")
@@ -178,12 +175,12 @@ option(MIOPEN_EMBED_BUILD "Build with the set of embed flags." Off)
 option(MIOPEN_DISABLE_USERDB "Disable user database access" ${MIOPEN_EMBED_BUILD})
 option(MIOPEN_BUILD_CK "Build own CK libs inline with MIOpen build" OFF)
 
-# MIOPEN_USE_HIP_KERNELS is a Workaround for COMgr issues
+# MIOPEN_USE_HIP_KERNELS is a workaround for COMGR issues
 if(MIOPEN_EMBED_BUILD)
     set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build as a shared library" FORCE)
-    option(MIOPEN_USE_HIP_KERNELS "Use HIP kernels." Off)
+    option(MIOPEN_USE_HIP_KERNELS "Use HIP kernels" Off)
 else()
-    option(MIOPEN_USE_HIP_KERNELS "Use HIP kernels." On)
+    option(MIOPEN_USE_HIP_KERNELS "Use HIP kernels" On)
 endif()
 
 if(MIOPEN_EMBED_BUILD)
@@ -196,16 +193,16 @@ if(MIOPEN_EMBED_BUILD)
     endif()
 endif()
 
-set( MIOPEN_BACKEND ${MIOPEN_DEFAULT_BACKEND} CACHE STRING "Which of MIOpens's backends to use?" )
-set_property( CACHE MIOPEN_BACKEND PROPERTY STRINGS OpenCL HIP HIPOC HIPNOGPU )
-
+set(MIOPEN_BACKEND ${MIOPEN_DEFAULT_BACKEND} CACHE STRING "Which of MIOpens's backends to use?")
+set_property(CACHE MIOPEN_BACKEND PROPERTY STRINGS OpenCL HIP HIPOC HIPNOGPU)
+    
 # On Windows, internal symbols are only exported when BUILD_TESTING=true. As a result, building driver with BUILD_TESTING=false will result in failure.
-set_var_to_condition(MIOPEN_BUILD_DRIVER_DEFAULT (NOT MIOPEN_EMBED_BUILD) AND (NOT (MIOPEN_BACKEND STREQUAL "HIPNOGPU")) AND ((NOT WIN32) OR BUILD_TESTING))
+set_var_to_condition(MIOPEN_BUILD_DRIVER_DEFAULT (NOT MIOPEN_EMBED_BUILD) AND (NOT (MIOPEN_BACKEND STREQUAL "HIPNOGPU")) AND ((NOT WIN32) OR BUILD_TESTING))  
 option(MIOPEN_BUILD_DRIVER "Build MIOpenDriver (and use it in tests)" ${MIOPEN_BUILD_DRIVER_DEFAULT})
-message(STATUS "MIOPEN_BUILD_DRIVER: ${MIOPEN_BUILD_DRIVER}" )
+message(STATUS "MIOPEN_BUILD_DRIVER: ${MIOPEN_BUILD_DRIVER}")
 
 # OpenCL 1.2
-if( MIOPEN_BACKEND STREQUAL "OpenCL" )
+if(MIOPEN_BACKEND STREQUAL "OpenCL")
     set(MIOPEN_BACKEND_OPENCL 1)
     find_package( OpenCL REQUIRED )
     find_program(MIOPEN_HIP_COMPILER clang++
@@ -228,7 +225,7 @@ if( MIOPEN_BACKEND STREQUAL "OpenCL" )
     # This is to pass all necessary build flags to HIP compiler
     # for device code compilation. Used within "find_package(hip...".
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2035#issuecomment-616861118.
-    set (HIP_CXX_COMPILER ${MIOPEN_HIP_COMPILER})
+    set(HIP_CXX_COMPILER ${MIOPEN_HIP_COMPILER})
 endif()
 
 # HIP SDK on Windows does not detect platform correctly, defaulting to "amd"
@@ -237,14 +234,7 @@ if(NOT HIP_PLATFORM AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 # HIP is always required
-if(NOT HIP_PATH)
-  if(WIN32)
-    set(HIP_PATH $ENV{HIP_PATH})
-  else()
-    set(HIP_PATH /opt/rocm)
-  endif()
-endif()
-find_package(hip REQUIRED PATHS ${HIP_PATH})
+find_package(hip REQUIRED PATHS /opt/rocm)
 message(STATUS "Build with HIP ${hip_VERSION} ${hip_DIR}")
 
 # Override HIP version in config.h, if necessary.
@@ -334,11 +324,11 @@ message(STATUS "Hip compiler flags: ${HIP_COMPILER_FLAGS}")
 add_compile_definitions($<$<COMPILE_LANGUAGE:CXX>:HIP_COMPILER_FLAGS=${HIP_COMPILER_FLAGS}>)
 
 # HIP
-if(MIOPEN_BACKEND STREQUAL "HIP" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_BACKEND STREQUAL "HIPNOGPU")
+if( MIOPEN_BACKEND STREQUAL "HIP" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_BACKEND STREQUAL "HIPNOGPU")
     if(MIOPEN_USE_COMPOSABLEKERNEL)
         if(MIOPEN_BUILD_CK)
             include(cmake/Dependencies.cmake)
-            execute_process(
+            execute_process (
                 COMMAND bash -c "grep -P -o '^[ \t]*(?<!#)[ \t]*ROCm\/composable_kernel@[a-fA-F0-9]+' ${CMAKE_SOURCE_DIR}/requirements.txt"
                 OUTPUT_VARIABLE _match
             )
@@ -350,7 +340,7 @@ if(MIOPEN_BACKEND STREQUAL "HIP" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_BA
             endif()
             miopen_add_dependency(composable_kernel HASH ${COMPOSABLE_KERNEL_HASH} options NO_LOCAL)
         else()
-            find_package(composable_kernel COMPONENTS device_conv_operations)
+            find_package(composable_kernel 1.0.0 COMPONENTS device_conv_operations)
         endif()
     endif()
     if(MIOPEN_BACKEND STREQUAL "HIPNOGPU")
@@ -361,8 +351,9 @@ if(MIOPEN_BACKEND STREQUAL "HIP" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_BA
     find_program(HIP_OC_COMPILER NAMES amdclang clang
         PATH_SUFFIXES bin
         PATHS
-            ${HIP_PATH}
+            /opt/rocm
             ${CMAKE_INSTALL_PREFIX}
+        ENV HIP_PATH
     )
     if(HIP_OC_COMPILER)
         message(STATUS "OpenCL compiler: ${HIP_OC_COMPILER}")
@@ -379,7 +370,7 @@ if(MIOPEN_BACKEND STREQUAL "HIP" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_BA
     # rocblas
     set(MIOPEN_USE_ROCBLAS ON CACHE BOOL "")
     if(MIOPEN_USE_ROCBLAS)
-        find_package(rocblas REQUIRED PATHS ${HIP_PATH})
+        find_package(rocblas REQUIRED PATHS /opt/rocm)
         message(STATUS "Build with rocblas ${rocblas_VERSION} ${rocblas_DIR}")
     else()
         message(STATUS "Build without rocblas")
@@ -389,9 +380,9 @@ if(MIOPEN_BACKEND STREQUAL "HIP" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_BA
     set_var_to_condition(MIOPEN_USE_HIPBLASLT_DEFAULT NOT WIN32)
     option(MIOPEN_USE_HIPBLASLT "Use hipBlasLt" ${MIOPEN_USE_HIPBLASLT_DEFAULT})
     if(MIOPEN_USE_HIPBLASLT)
-        find_package(hipblaslt REQUIRED PATHS ${HIP_PATH})
+        find_package(hipblaslt REQUIRED PATHS /opt/rocm $ENV{HIP_PATH})
         message(STATUS "Build with hipBLASLt ${hipblaslt_VERSION} ${hipblaslt_DIR}")
-        find_package(hipblas-common REQUIRED PATHS ${HIP_PATH})
+        find_package(hipblas-common REQUIRED PATHS /opt/rocm $ENV{HIP_PATH})
         message(STATUS "Build with hipBLAS-common ${hipblas-common_VERSION} ${hipBLAS-common_DIR}")
     else()
         message(STATUS "Build without hipbBLASLt")
@@ -403,7 +394,7 @@ else()
         message(FATAL_ERROR "HIPRTC cannot be used without HIP backend")
     endif()
 endif()
-message(STATUS "${MIOPEN_BACKEND} backend selected.")
+message( STATUS "${MIOPEN_BACKEND} backend selected." )
 
 # look for and register clang-offload-bundler
 if(MIOPEN_HIP_COMPILER MATCHES ".*clang\\+\\+.*")
@@ -421,7 +412,7 @@ else()
     message(STATUS "clang-offload-bundler not found")
 endif()
 
-set_var_to_condition(MIOPEN_USE_MLIR_DEFAULT (NOT ${MIOPEN_USE_COMGR}))
+set_var_to_condition(MIOPEN_USE_MLIR_DEFAULT NOT (NOT ${BUILD_SHARED_LIBS} AND ${MIOPEN_USE_COMGR}))
 option(MIOPEN_USE_MLIR "Use MLIR compilation backend" ${MIOPEN_USE_MLIR_DEFAULT})
 
 if(MIOPEN_USE_MLIR)
@@ -454,9 +445,9 @@ endif()
 
 # Update HIP Runtime Package Dependency
 if(ENABLE_ASAN_PACKAGING)
-  set(DEPENDS_HIP_RUNTIME "hip-runtime-amd-asan" )
+  set(DEPENDS_HIP_RUNTIME "hip-runtime-amd-asan")
 else()
-  set(DEPENDS_HIP_RUNTIME "hip-runtime-amd" )
+  set(DEPENDS_HIP_RUNTIME "hip-runtime-amd")
 endif()
 set(MIOPEN_PACKAGE_REQS "${DEPENDS_HIP_RUNTIME}")
 
@@ -496,19 +487,17 @@ message(STATUS "HALF_INCLUDE_DIR: ${HALF_INCLUDE_DIR}")
 option(MIOPEN_DEBUG_FIND_DB_CACHING "Use system find-db caching" ON)
 
 if(WIN32)
-    set( DATA_INSTALL_DIR bin )
-    set( DATABASE_INSTALL_DIR ${DATA_INSTALL_DIR} )
+    set(DATA_INSTALL_DIR bin)
+    set(DATABASE_INSTALL_DIR ${DATA_INSTALL_DIR})
 else()
-    set( MIOPEN_INSTALL_DIR miopen )
-    set( DATA_INSTALL_DIR ${CMAKE_INSTALL_DATADIR}/${MIOPEN_INSTALL_DIR} )
-    set( DATABASE_INSTALL_DIR ${DATA_INSTALL_DIR}/db )
+    set(MIOPEN_INSTALL_DIR miopen)
+    set(DATA_INSTALL_DIR ${CMAKE_INSTALL_DATADIR}/${MIOPEN_INSTALL_DIR})
+    set(DATABASE_INSTALL_DIR ${DATA_INSTALL_DIR}/db)
 endif()
 
 if(MIOPEN_ENABLE_AI_KERNEL_TUNING OR MIOPEN_ENABLE_AI_IMMED_MODE_FALLBACK)
     find_package(frugally-deep CONFIG REQUIRED)
     message(STATUS "Build with frugally-deep ${frugally-deep_VERSION} ${frugally-deep_DIR}")
-    find_package(Eigen3 REQUIRED)
-    message(STATUS "Build with Eigen3 ${Eigen3_VERSION} ${Eigen3_DIR}")
 endif()
 
 if(WIN32)
@@ -545,8 +534,8 @@ if(NOT WIN32 AND MIOPEN_USE_ROCTRACER)
     find_path(ROCTRACER_INCLUDE_DIR "roctracer/roctx.h")
     find_library(rocTracer roctx64)
     if(rocTracer AND ROCTRACER_INCLUDE_DIR)
-        MESSAGE(STATUS "Build with rocTracer: " ${rocTracer})
-        MESSAGE(STATUS "rocTracer include directory: " ${ROCTRACER_INCLUDE_DIR})
+        message(STATUS "Build with rocTracer: " ${rocTracer})
+        message(STATUS "rocTracer include directory: " ${ROCTRACER_INCLUDE_DIR})
         set(MIOPEN_PACKAGE_REQS "${MIOPEN_PACKAGE_REQS}, roctracer")
     else()
         message(WARNING "rocTracer cannot be found! Build without rocTracer")
@@ -605,6 +594,8 @@ else()
     set(PERFDB_SUFFIX ".txt")
 endif()
 
+# Per-GPU database artifact installation (PDB's, FDB's KDB's)
+
 function(unpack_db db_bzip2_file)
     get_filename_component(__fname ${db_bzip2_file} NAME_WLE)
     add_custom_command(OUTPUT ${KERNELS_BINARY_DIR}/${__fname}
@@ -628,19 +619,6 @@ function(unpack_db db_bzip2_file)
     set(__fname ${__fname} PARENT_SCOPE)
 endfunction()
 
-file(GLOB PERF_DB_BZIP_FILES CONFIGURE_DEPENDS "${KERNELS_SOURCE_DIR}/*.db.bz2" "${KERNELS_SOURCE_DIR}/*.db.txt.bz2")
-file(GLOB FIND_DB_BZIP_FILES CONFIGURE_DEPENDS "${KERNELS_SOURCE_DIR}/*.fdb.txt.bz2")
-
-foreach(DB_BZIP_FILE ${PERF_DB_BZIP_FILES} ${FIND_DB_BZIP_FILES})
-    unpack_db(${DB_BZIP_FILE})
-    if(MIOPEN_EMBED_DB STREQUAL "" AND NOT MIOPEN_DISABLE_SYSDB AND NOT ENABLE_ASAN_PACKAGING)
-        install(FILES ${KERNELS_BINARY_DIR}/${__fname}
-                DESTINATION ${DATABASE_INSTALL_DIR})
-    endif()
-endforeach()
-
-# Begin KDB package creation
-
 function(install_kdb FILE_NAME COMPONENT_NAME)
     if(EXISTS "${FILE_NAME}")
         unpack_db(${FILE_NAME})
@@ -658,24 +636,44 @@ function(install_kdb FILE_NAME COMPONENT_NAME)
     set(DVC_MISSING_FILES ${DVC_MISSING_FILES} PARENT_SCOPE)
 endfunction()
 
-# Both the lists below should be in sync always
-set(KDB_BZ2_FILES gfx942.kdb.bz2 gfx90a.kdb.bz2 gfx1030.kdb.bz2 gfx908.kdb.bz2 gfx906.kdb.bz2 gfx900.kdb.bz2)
-set(COMPONENT_LST gfx942kdb gfx90akdb gfx1030kdb gfx908kdb gfx906kdb gfx900kdb)
+function(install_gpu_databases gfx_target)
+    message(STATUS "Adding support for installing ${gfx_target} database artifacts")
+    get_property(_targets GLOBAL PROPERTY MIOPEN_INSTALL_GPU_DATABASES)
+    if("${gfx_target}" IN_LIST _targets)
+        message(FATAL_ERROR "AMDGPU target ${gfx_target} already defined")
+    endif()
+    
+    set(KDB_FILENAME "${gfx_target}.kdb.bz2")
+    if(${KDB_FILENAME} IN_LIST KDB_BZ2_FILES)
+        set(KDB_COMPONENT_NAME "${gfx_target}kdb")
+        install_kdb(${KERNELS_SOURCE_DIR}/${KDB_FILENAME} ${KDB_COMPONENT_NAME})
+    endif()
+    set(DVC_MISSING_FILES ${DVC_MISSING_FILES} PARENT_SCOPE)
 
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.17)
-    foreach(__file __component IN ZIP_LISTS KDB_BZ2_FILES COMPONENT_LST)
-        install_kdb(${KERNELS_SOURCE_DIR}/${__file} ${__component})
+    file(GLOB PERF_DB_BZIP_FILES CONFIGURE_DEPENDS "${KERNELS_SOURCE_DIR}/${gfx_target}*.db.bz2" "${KERNELS_SOURCE_DIR}/${gfx_target}*.db.txt.bz2")
+    file(GLOB FIND_DB_BZIP_FILES CONFIGURE_DEPENDS "${KERNELS_SOURCE_DIR}/${gfx_target}*.fdb.txt.bz2")
+
+    foreach(DB_BZIP_FILE ${PERF_DB_BZIP_FILES} ${FIND_DB_BZIP_FILES})
+        unpack_db(${DB_BZIP_FILE})
+        if(MIOPEN_EMBED_DB STREQUAL "" AND NOT MIOPEN_DISABLE_SYSDB AND NOT ENABLE_ASAN_PACKAGING)
+            install(FILES ${KERNELS_BINARY_DIR}/${__fname}
+                    DESTINATION ${DATABASE_INSTALL_DIR})
+        endif()
     endforeach()
-else()
-    # TODO: Upgrade minimum CMake to version 3.17+ and use IN ZIP_LISTS instead
-    list(LENGTH KDB_BZ2_FILES __length)
-    math(EXPR __high "${__length} - 1")
-    foreach(__index RANGE ${__high})
-        list(GET COMPONENT_LST ${__index} __component)
-        list(GET KDB_BZ2_FILES ${__index} __file)
-        install_kdb(${KERNELS_SOURCE_DIR}/${__file} ${__component})
-    endforeach()
-endif()
+endfunction()
+
+# The default behaviour when no list of AMDGPU targets is supplied should be to
+# install for all targets; this was the behaviour before MIOPEN_INSTALL_GPU_DATABASES
+# was added.
+set(ALL_GPU_DATABASES gfx803 gfx900 gfx906 gfx908 gfx90a gfx942 gfx1030)
+set(MIOPEN_INSTALL_GPU_DATABASES "${ALL_GPU_DATABASES}" CACHE STRING "List of AMDGPU targets for which to install databases")
+
+# This list should be updated when a new KDB file is added to the project
+set(KDB_BZ2_FILES gfx942.kdb.bz2 gfx90a.kdb.bz2 gfx1030.kdb.bz2 gfx908.kdb.bz2 gfx906.kdb.bz2 gfx900.kdb.bz2)
+
+foreach(_gfx_target ${MIOPEN_INSTALL_GPU_DATABASES})
+    install_gpu_databases(${_gfx_target})
+endforeach()
 
 if(DVC_MISSING_FILES)
     string(REPLACE ";" ", " __dvc_missing_files "${DVC_MISSING_FILES}")
@@ -816,6 +814,7 @@ enable_cppcheck(
         __linux__=1
 )
 
+
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
@@ -832,4 +831,9 @@ endif()
 if(BUILD_TESTING)
     add_subdirectory(test)
     add_subdirectory(speedtests)
+endif()
+
+add_subdirectory(utils)
+if(MIOPEN_ENABLE_FIN)
+    add_subdirectory(fin)
 endif()

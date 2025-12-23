@@ -761,7 +761,7 @@ if( MIOPEN_BACKEND STREQUAL "HIPNOGPU" )
         )
 endif()
 
-if( MIOPEN_BACKEND MATCHES "OpenCL" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_BACKEND STREQUAL "HIP" OR MIOPEN_BACKEND STREQUAL "HIPNOGPU")
+if(MIOPEN_BACKEND MATCHES "OpenCL" OR MIOPEN_BACKEND STREQUAL "HIPOC" OR MIOPEN_BACKEND STREQUAL "HIP" OR MIOPEN_BACKEND STREQUAL "HIPNOGPU")
     set(KERNELS_SRC_BATCH_FACTOR 50 CACHE STRING "Amount of kernel source files to inline to a single object file.")
     set(KERNELS_BATCH_ID 0)
 
@@ -899,7 +899,7 @@ if(BUILD_TESTING)
 endif()
 
 if(MIOPEN_ENABLE_AI_KERNEL_TUNING OR MIOPEN_ENABLE_AI_IMMED_MODE_FALLBACK)
-    target_link_libraries(MIOpen PRIVATE frugally-deep::fdeep Eigen3::Eigen)
+    target_link_libraries(MIOpen PRIVATE frugally-deep::fdeep)
     if(NOT TARGET nlohmann_json)
         # frugally-deep has broken linking to nlohmann_json
         add_library(nlohmann_json INTERFACE IMPORTED GLOBAL)
@@ -978,43 +978,10 @@ endif()
 target_link_libraries(MIOpen PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(MIOpen INTERFACE $<BUILD_INTERFACE:nlohmann_json::nlohmann_json>)
 
-#target_internal_library(MIOpen Boost::filesystem)
-#list(APPEND PACKAGE_STATIC_DEPENDS PACKAGE Boost COMPONENTS filesystem)
-if(NOT WIN32 AND NOT APPLE)
-    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/lib.def "
-MIOPEN_${MIOPEN_BACKEND}_1
-{
-global:
-    miopen*;
-    extern \"C++\" {
-        miopen::*;
-    };
-local:
-    *boost*;
-    extern \"C++\" {
-        std::*;
-    };
-};
-")
-    target_link_libraries(MIOpen PRIVATE "-Wl,--version-script=${CMAKE_CURRENT_BINARY_DIR}/lib.def")
-    target_link_libraries(MIOpen PRIVATE "-Wl,--exclude-libs,ALL")
-    set_target_properties(MIOpen PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
-endif()
-
-#######################################
 if(MIOPEN_ENABLE_SQLITE)
     # MIOpen depends on SQLite
     target_link_libraries(MIOpen PRIVATE SQLite::SQLite3)
     target_link_libraries(MIOpen INTERFACE  $<BUILD_INTERFACE:SQLite::SQLite3>)
-endif()
-############################################################
-# MIOpen depends on librt for Boost.Interprocess
-if(NOT WIN32 AND NOT APPLE)
-    find_library(LIBRT rt)
-    if(LIBRT)
-        message(STATUS "Librt: " ${LIBRT})
-        target_internal_library(MIOpen ${LIBRT})
-    endif()
 endif()
 
 if(MIOPEN_USE_ROCTRACER)

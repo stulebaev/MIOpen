@@ -12,7 +12,6 @@
 # Compiled Dynamic libraries
 *.so
 *.dll
-*.dylib
 
 # Compiled Static libraries
 *.lai
@@ -23,7 +22,6 @@
 # Executables
 *.exe
 *.out
-*.app
 
 # vim tags
 tags
