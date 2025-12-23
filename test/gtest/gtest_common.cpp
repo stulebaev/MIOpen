@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2024 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,9 +40,9 @@ MockTargetProperties::MockTargetProperties(const TargetProperties& target_proper
 
 const std::string& MockTargetProperties::Name() const { return name; }
 
-inline std::optional<bool> MockTargetProperties::Xnack() const
+bool MockTargetProperties::isXnackEnabled() const
 {
-    return xnack_disabled ? std::nullopt : TargetProperties::Xnack();
+    return xnack_disabled ? false : TargetProperties::isXnackEnabled();
 }
 
 MockHandle::MockHandle(const DevDescription& dev_description, bool disable_xnack)
@@ -80,12 +80,14 @@ Gpu GetDevGpuType()
             return Gpu::gfx90A;
         else if(dev_name == "gfx942")
             return Gpu::gfx94X;
-        else if(dev_name == "gfx950")
+        else if(miopen::StartsWith(dev_name, "gfx95"))
             return Gpu::gfx950;
         else if(miopen::StartsWith(dev_name, "gfx103"))
             return Gpu::gfx103X;
         else if(miopen::StartsWith(dev_name, "gfx110"))
             return Gpu::gfx110X;
+        else if(miopen::StartsWith(dev_name, "gfx115"))
+            return Gpu::gfx115X;
         else if(miopen::StartsWith(dev_name, "gfx120"))
             return Gpu::gfx120X;
         else
@@ -126,6 +128,9 @@ const std::multimap<Gpu, DevDescription>& GetAllKnownDevices()
         {Gpu::gfx110X, {"gfx1101", 27}},
         {Gpu::gfx110X, {"gfx1101", 30}},
         {Gpu::gfx110X, {"gfx1102", 16}},
+        {Gpu::gfx115X, {"gfx1150", 24}},
+        {Gpu::gfx115X, {"gfx1151", 40}},
+        {Gpu::gfx115X, {"gfx1152", 8}},
         {Gpu::gfx120X, {"gfx1201", 32}},
         {Gpu::gfx120X, {"gfx1201", 28}}
         // clang-format on

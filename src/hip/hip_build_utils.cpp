@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2019 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,8 +32,8 @@
 #include <miopen/env.hpp>
 #include <miopen/target_properties.hpp>
 
+#include <sstream>
 #include <string>
-#include <tuple>
 
 MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_DEBUG_HIP_VERBOSE)
 MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_DEBUG_HIP_DUMP)

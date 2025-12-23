@@ -38,9 +38,10 @@
 #include <memory>
 #include <vector>
 
-#include "../test/verify.hpp"
+#include <../test/verify.hpp>
 
 #include <miopen/errors.hpp>
+#include <miopen/miopen.h>
 
 template <typename T>
 T sigmoid(T x)

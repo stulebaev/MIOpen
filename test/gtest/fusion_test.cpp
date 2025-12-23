@@ -23,9 +23,10 @@
  * SOFTWARE.
  *
  *******************************************************************************/
+#include <gtest/gtest.h>
+#include <gtest/gtest_common.hpp>
 #include <miopen/miopen.h>
 
-#include "gtest_common.hpp"
 #include "tensor_holder.hpp"
 #include "get_handle.hpp"
 #include "cba.hpp"
@@ -34,7 +35,7 @@
 namespace {
 bool IsTestSupportedForDevice()
 {
-    using e_mask = enabled<Gpu::gfx94X, Gpu::gfx103X, Gpu::gfx110X>;
+    using e_mask = enabled<Gpu::gfx94X, Gpu::gfx103X, Gpu::gfx110X, Gpu::gfx115X>;
     // gfx120X is not enabled due to WORKAROUND_SWDEV_479810
     using d_mask = disabled<Gpu::None>;
     return ::IsTestSupportedForDevMask<d_mask, e_mask>();
@@ -64,7 +65,7 @@ public:
     miopen::Allocator::ManageDataPtr wei_dev2;
 };
 
-inline bool SkipTest() { return get_handle_xnack(); }
+bool SkipTest() { return get_handle_xnack(); }
 
 } // namespace
 
@@ -90,7 +91,7 @@ TEST_P(GPU_FusionSetArg_FP16, TestSetArgApiCall)
 
     auto&& handle = get_handle();
     auto convOp   = std::make_shared<miopen::ConvForwardOpDescriptor>(cba_float::conv_desc,
-                                                                      cba_float::weights.desc);
+                                                                    cba_float::weights.desc);
     miopenOperatorArgs_t fusion_args = static_cast<miopenOperatorArgs_t>(&(cba_float::params));
     miopenFusionPlanDescriptor_t fusion_plan =
         static_cast<miopenFusionPlanDescriptor_t>(&(cba_float::fusePlanDesc));
@@ -126,5 +127,44 @@ INSTANTIATE_TEST_SUITE_P(Full,
                                           testing::Values(0.25f),
                                           testing::Values(0.75f),
                                           testing::Values(0.5f)));
+
+TEST(CPU_FusionCreateOpConvForward_FP32, TestInvalidConvLayout)
+{
+    std::vector<int> xDims{4, 4, 4, 4};
+    std::vector<int> xStrides{1, 4, 16, 64}; // WHCN order
+
+    std::vector<int> wDims{1, 4, 4, 4};
+    std::vector<int> wStrides{16, 4, 1, 1};
+
+    std::vector<int> padding{0, 0};
+    std::vector<int> dilation{1, 1};
+    std::vector<int> stride{1, 1};
+
+    miopenTensorDescriptor_t xDesc;
+    miopenCreateTensorDescriptor(&xDesc);
+    miopenSetTensorDescriptor(
+        xDesc, miopenDataType_t::miopenFloat, xDims.size(), xDims.data(), xStrides.data());
+
+    miopenTensorDescriptor_t wDesc;
+    miopenCreateTensorDescriptor(&wDesc);
+    miopenSetTensorDescriptor(
+        wDesc, miopenDataType_t::miopenFloat, wDims.size(), wDims.data(), wStrides.data());
+
+    miopenFusionPlanDescriptor_t fusionPlanDesc;
+    miopenCreateFusionPlan(&fusionPlanDesc, miopenVerticalFusion, xDesc);
+
+    miopenConvolutionDescriptor_t convDesc;
+    miopenCreateConvolutionDescriptor(&convDesc);
+    miopenInitConvolutionNdDescriptor(convDesc,
+                                      2,
+                                      padding.data(),
+                                      stride.data(),
+                                      dilation.data(),
+                                      miopenConvolutionMode_t::miopenConvolution);
+
+    miopenFusionOpDescriptor_t convOp;
+    auto status = miopenCreateOpConvForward(fusionPlanDesc, &convOp, convDesc, wDesc);
+    EXPECT_EQUAL(status, miopenStatusUnknownError);
+}
 
 #endif

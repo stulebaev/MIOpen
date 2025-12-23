@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2017 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -50,6 +50,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef MLO_INTERNAL_H_
 #define MLO_INTERNAL_H_
 
+// Header Files
 #ifndef NOMINMAX
 #define NOMINMAX // stupid windows.h confused with min() macros in std namespace
 #endif
@@ -82,14 +83,30 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <mach/mach_time.h> // for mach_absolute_time() and friends
 #endif
 
-#include <vector>
-#include <utility>
-#include <string>
+#include <iomanip>
+#include <cstdio>
+#include <cstdlib>
+#include <cassert>
 #include <cmath>
+#include <map>
+#include <string>
+#include <limits>
+#include <algorithm> // std::find  and std::min std::maxx
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <ctime>
+#include <cstring>
+#include <vector>
+#include <numeric>
+#include <cstdint>
+#include <tuple>
+#include <numbers>
 
 inline int mloLg2(int v)
 {
-    auto ret = static_cast<int>(std::ceil(std::log(v) / M_LN2));
+    auto ret = static_cast<int>(std::ceil(std::log(v) / std::numbers::ln2));
     return (ret);
 }
 

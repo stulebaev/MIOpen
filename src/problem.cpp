@@ -542,7 +542,9 @@ std::vector<Solution> Problem::FindSolutionsImpl(const Handle& handle,
                 result.SetInvoker(std::move(invoker), programs, conv_solution.construction_params);
             }
             else
+            {
                 MIOPEN_LOG_E("Error: solution without invoker factory.");
+            }
         }
     }
     return results;

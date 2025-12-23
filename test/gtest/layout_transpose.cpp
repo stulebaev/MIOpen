@@ -35,7 +35,6 @@
 #include <miopen/tensor_layout.hpp>
 
 #include "driver.hpp"
-#include "random.hpp"
 
 #include <vector>
 

@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,15 +26,15 @@
 #pragma once
 
 #include <miopen/db.hpp>
+#include <miopen/db_record.hpp>
 #include <miopen/lock_file.hpp>
 
-#include <vector>
 #include <any>
+#include <chrono>
+#include <map>
 #include <optional>
 #include <string>
 #include <sstream>
-#include <map>
-#include <chrono>
 
 namespace miopen {
 

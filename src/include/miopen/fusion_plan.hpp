@@ -1,15 +1,14 @@
+// Copyright © Advanced Micro Devices, Inc., or its affiliates.
+// SPDX-License-Identifier:  MIT
 
 #ifndef MIOPEN_GUARD_MLOPEN_FUSION_PLAN_HPP
 #define MIOPEN_GUARD_MLOPEN_FUSION_PLAN_HPP
 
+#include <miopen/miopen.h>
 #include <miopen/tensor.hpp>
 #include <miopen/fusion.hpp>
 #include <miopen/search_options.hpp>
 
-#include <string>
-#include <utility>
-#include <memory>
-#include <functional>
 #include <optional>
 
 namespace miopen {

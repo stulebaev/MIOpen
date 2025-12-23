@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2017 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,8 @@
  * SOFTWARE.
  *
  *******************************************************************************/
+#include <miopen/config.h>
+
 #include <miopen/errors.hpp>
 #include <miopen/gcn_asm_utils.hpp>
 #include <miopen/hip_build_utils.hpp>
@@ -38,13 +40,10 @@
 #include <miopen/env.hpp>
 #include <miopen/comgr.hpp>
 
-#include <string>
-#include <string_view>
-#include <tuple>
+#include <cstring>
 #include <mutex>
-#include <memory>
 #include <optional>
-#include <utility>
+#include <sstream>
 
 #if defined(__linux__)
 #include <unistd.h>

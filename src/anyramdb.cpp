@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,15 +25,19 @@
  *******************************************************************************/
 
 #include <miopen/anyramdb.hpp>
+
 #include <miopen/errors.hpp>
+#include <miopen/logger.hpp>
+
 #include <miopen/filesystem.hpp>
 
 #include <chrono>
-#include <mutex>
+#include <ctime>
+#include <fstream>
 #include <map>
-#include <memory>
+#include <mutex>
 #include <optional>
-#include <string>
+#include <sstream>
 
 namespace miopen {
 
@@ -93,7 +97,7 @@ std::optional<AnyRamDb::TRecord> AnyRamDb::FindRecordUnsafe(const std::string& p
     const auto it = cache.find(problem);
 
     if(it == cache.end())
-        return std::nullopt;
+        return {};
 
     return it->second;
 }

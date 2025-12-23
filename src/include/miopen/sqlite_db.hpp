@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2019 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,18 +39,13 @@
 #include <miopen/lock_file.hpp>
 #include <miopen/env.hpp>
 
+#include <boost/core/explicit_operator_bool.hpp>
 #include "sqlite3.h"
+#include <mutex>
 
 #include <string>
-#include <tuple>
-#include <sstream>
-#include <memory>
-#include <unordered_map>
-#include <functional>
-#include <algorithm>
-#include <mutex>
-#include <map>
 #include <optional>
+#include <unordered_map>
 
 MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_DEBUG_DISABLE_SQL_WAL)
 MIOPEN_DECLARE_ENV_VAR_STR(MIOPEN_DEBUG_PERFDB_OVERRIDE)
@@ -539,7 +534,7 @@ public:
     }
 
     /// Updates record under key PROBLEM_CONFIG with data ID:VALUES in database.
-    /// Returns updated record or std::nullopt if insertion failed
+    /// Returns updated record or boost::none if insertion failed
     template <class T, class V>
     inline std::optional<DbRecord>
     UpdateUnsafe(const T& problem_config, const std::string& id, const V& values)

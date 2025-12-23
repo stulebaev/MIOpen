@@ -25,8 +25,9 @@
  *******************************************************************************/
 #include "../conv2d.hpp"
 #include <miopen/miopen.h>
+#include <gtest/gtest_common.hpp>
+#include <gtest/gtest.h>
 #include "get_handle.hpp"
-#include "gtest_common.hpp"
 
 namespace conv_group {
 void GetArgs(const std::string& param, std::vector<std::string>& tokens)

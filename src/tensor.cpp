@@ -41,12 +41,11 @@
 
 #include <nlohmann/json.hpp>
 
-#include <optional>
 #include <algorithm>
-#include <initializer_list>
-#include <utility>
+#include <cassert>
 #include <numeric>
-#include <functional>
+#include <optional>
+#include <string>
 
 namespace miopen {
 

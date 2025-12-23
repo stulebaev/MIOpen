@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2017 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,15 +36,17 @@
 #include <miopen/readonlyramdb.hpp>
 #include <miopen/temp_file.hpp>
 
-#include <optional>
-#include <mutex>
-#include <type_traits>
-#include <random>
-#include <sstream>
-#include <ostream>
-#include <ios>
 #include <array>
-#include <utility>
+#include <cstdio>
+#include <fstream>
+#include <mutex>
+#include <limits>
+#include <optional>
+#include <random>
+#include <shared_mutex>
+#include <string>
+#include <thread>
+#include <vector>
 
 namespace miopen {
 namespace tests {
@@ -306,7 +308,7 @@ protected:
     static void ValidateSingleEntry(
         TKey key, const std::array<std::pair<const std::string, TValue>, count> values, TDb& db)
     {
-        std::optional<DbRecord> record = db.FindRecord(key);
+        auto record = db.FindRecord(key);
 
         EXPECT(record);
 
@@ -707,10 +709,12 @@ private:
 
         if(thread_logs_root().has_value())
         {
+            // NOLINTBEGIN (bugprone-unchecked-optional-access)
             const auto out_path = thread_logs_root().value() /
                                   ("thread-" + std::to_string(id) + "_" + log_postfix + ".log");
             const auto err_path = thread_logs_root().value() /
                                   ("thread-" + std::to_string(id) + "_" + log_postfix + "-err.log");
+            // NOLINTEND (bugprone-unchecked-optional-access)
 
             fs::remove(out_path);
             fs::remove(err_path);
@@ -992,6 +996,7 @@ public:
 
                 if(thread_logs_root().has_value())
                 {
+                // NOLINTNEXTLINE (bugprone-unchecked-optional-access)
                     args += std::string{" --"} + ArgsHelper::logs_path_arg + " " + thread_logs_root().value();
                 }
 
@@ -1077,6 +1082,7 @@ public:
 
                 if(thread_logs_root().has_value())
                 {
+                    // NOLINTNEXTLINE (bugprone-unchecked-optional-access)
                     args += std::string{" --"} + ArgsHelper::logs_path_arg + " " + thread_logs_root().value();
                 }
 

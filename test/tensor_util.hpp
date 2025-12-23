@@ -28,7 +28,10 @@
 #define GUARD_TENSOR_UTIL_HPP
 
 #include "tensor_holder.hpp"
+#include <miopen/stringutils.hpp>
 #include <miopen/filesystem.hpp>
+
+namespace fs = miopen::fs;
 
 // unary operation
 template <class DataOp, typename Container>
@@ -160,7 +163,7 @@ void operate_over_subtensor(DataOp&& dataOp,
 }
 
 template <typename T>
-void output_tensor_to_csv(const tensor<T>& x, const miopen::fs::path& filename)
+void output_tensor_to_csv(const tensor<T>& x, const fs::path& filename)
 {
     int dim = x.desc.GetSize();
     std::vector<int> index(dim);
@@ -189,7 +192,7 @@ void output_tensor_to_csv(const tensor<T>& x, const miopen::fs::path& filename)
 }
 
 template <typename T>
-void output_tensor_to_bin(const miopen::fs::path& fileName, T* data, size_t dataNumItems)
+void output_tensor_to_bin(const fs::path& fileName, T* data, size_t dataNumItems)
 {
     std::ofstream outFile(fileName, std::ios::binary);
     if(outFile.is_open())
@@ -265,23 +268,23 @@ void print_tensor(const tensor<T>& tensor_val,
     std::cout << "\n=================end=====================\n";
 }
 
+template <typename T>
 size_t getCacheSizeLimit(const std::string& deviceName)
 {
-    size_t mb = 0;
-    if(miopen::StartsWith(deviceName, "gfx90a") || miopen::StartsWith(deviceName, "gfx908"))
-        mb = 16; // twice the available L2 (8MB)
-    else if(miopen::StartsWith(deviceName, "gfx803"))
+    size_t mb = 4; // default: 2x L2 size (2MB)
+    if(miopen::StartsWith(deviceName, "gfx803"))
         mb = 4; // twice the available L2 (2MB)
     else if(miopen::StartsWith(deviceName, "gfx900") || miopen::StartsWith(deviceName, "gfx906"))
         mb = 8; // twice the available L2 (4MB)
+    else if(miopen::StartsWith(deviceName, "gfx90a") || miopen::StartsWith(deviceName, "gfx908"))
+        mb = 16; // twice the available L2 (8MB)
     else if(miopen::StartsWith(deviceName, "gfx942"))
         mb = 256; // L3 size (256MB)
     else if(miopen::StartsWith(deviceName, "gfx103"))
         mb = 128; // L3 size (128MB)
-    else
-        mb = 4; // default: twice the available L2 (2MB)
 
-    return (mb * 1024ul * 1024ul); // convert to MiB
+    mb = (mb * 1024ul * 1024ul); // convert to MiB
+    return (mb / sizeof(T));     // returning number of elements of type T
 }
 
 #endif

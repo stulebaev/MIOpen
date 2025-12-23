@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2020 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,11 +34,11 @@
 #include <miopen/bz2.hpp>
 #include <miopen/md5.hpp>
 
-#include <string>
-#include <vector>
-#include <sstream>
+#include <boost/core/explicit_operator_bool.hpp>
+
 #include <functional>
 #include <optional>
+#include <string>
 
 namespace miopen {
 struct KernelConfig

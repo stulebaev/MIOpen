@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2017 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,15 +30,19 @@
 #include <miopen/logger.hpp>
 #include <miopen/filesystem.hpp>
 
+#include <boost/date_time/posix_time/posix_time_types.hpp>
+
+#include <algorithm>
+#include <cassert>
 #include <chrono>
-#include <mutex>
-#include <shared_mutex>
-#include <optional>
-#include <string>
+#include <cstdio>
 #include <fstream>
 #include <ios>
-#include <algorithm>
-#include <utility>
+#include <mutex>
+#include <optional>
+#include <shared_mutex>
+#include <string>
+#include <vector>
 
 namespace miopen {
 
@@ -83,7 +87,7 @@ std::optional<DbRecord> PlainTextDb::FindRecord(const std::string& key)
 {
     if(DisableUserDbFileIO)
         return {};
-    const auto lock = shared_lock(lock_file, GetLockTimeout());
+    const auto lock = exclusive_lock(lock_file, GetLockTimeout());
     MIOPEN_VALIDATE_LOCK(lock);
     return FindRecordUnsafe(key, nullptr);
 }
@@ -130,8 +134,7 @@ bool PlainTextDb::Remove(const std::string& key, const std::string& id)
     return StoreRecordUnsafe(*record);
 }
 
-std::optional<DbRecord> PlainTextDb::FindRecordUnsafe(const std::string& key,
-                                                      RecordPositions* pos)
+std::optional<DbRecord> PlainTextDb::FindRecordUnsafe(const std::string& key, RecordPositions* pos)
 {
     if(pos != nullptr)
     {
@@ -258,7 +261,8 @@ bool PlainTextDb::FlushUnsafe(const DbRecord& record, const RecordPositions* pos
             return false;
         }
 
-        const auto temp_name = filename + ".temp";
+        const auto temp_name = filename.string() + "." + sysinfo::GetSystemHostname() + "." +
+                               std::to_string(getpid()) + ".temp";
         std::ofstream to(temp_name, std::ios::binary);
 
         if(!to)
@@ -273,15 +277,21 @@ bool PlainTextDb::FlushUnsafe(const DbRecord& record, const RecordPositions* pos
         Copy(from, to, pos->begin);
         record.WriteContents(to);
         from.seekg(pos->end);
-        Copy(from, to, from_size - pos->end);
+        if(from_size > pos->end)
+            Copy(from, to, from_size - pos->end);
 
         from.close();
         to.close();
 
-        fs::remove(filename);
+        // rename atomically deletes and replaces filename
         fs::rename(temp_name, filename);
         /// \todo What if rename fails? Thou shalt not loose the original file.
         fs::permissions(filename, fs::perms::all);
+        while(fs::exists(temp_name))
+        {
+            MIOPEN_LOG_I2("Waiting for rename ");
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
     }
     return true;
 }

@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2020-2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2020-2022 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,11 +23,11 @@
  * SOFTWARE.
  *
  *******************************************************************************/
-#include <miopen/miopen.h>
 #include <miopen/handle.hpp>
+#include <miopen/miopen.h>
+#include <miopen/tensor_reorder_util.hpp>
 #include <miopen/tensor.hpp>
 #include <miopen/tensor_layout.hpp>
-#include <miopen/tensor_reorder_util.hpp>
 #include <miopen/invoker.hpp>
 #include <miopen/invoke_params.hpp>
 
@@ -37,10 +37,10 @@
 #include "get_handle.hpp"
 #include "workspace.hpp"
 
-#include <vector>
-#include <iostream>
+#include <cstdlib>
+#include <ctime>
 #include <optional>
-#include <utility>
+#include <vector>
 
 template <typename T>
 void cpu_tensor_reorder(T* dst,
@@ -393,9 +393,9 @@ struct tensor_reorder_driver : tensor_reorder_base_driver
             if(invoker_factory.has_value())
             {
                 const auto invoker = handle.PrepareInvoker(*invoker_factory, construction_params);
-                // run GPU
+                // run gpu
                 invoker(handle, invoke_param);
-                // run CPU
+                // run cpu
                 cpu_reorder<T>::run(t_dst.data.data(),
                                     t_src.data.data(),
                                     dim_0,

@@ -54,7 +54,7 @@ bool ConvBinWinograd3x3U::IsApplicable(const ExecutionContext& ctx,
         return false;
 
     const auto& target = ctx.GetStream().GetTargetProperties();
-    if(target.Xnack().value_or(true))
+    if(target.isXnackEnabled())
         return false;
 
     const auto name = ctx.GetStream().GetDeviceName();

@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2019 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,17 +36,17 @@
 #include <miopen/temp_file.hpp>
 #include <miopen/filesystem.hpp>
 
-#include <boost/thread/shared_lock.hpp>
+#include <boost/thread.hpp>
 
-#include <vector>
 #include <array>
-#include <string>
 #include <cstdio>
 #include <fstream>
 #include <mutex>
-#include <thread>
-#include <random>
 #include <optional>
+#include <random>
+#include <string>
+#include <thread>
+#include <vector>
 
 namespace miopen {
 namespace tests {
@@ -317,7 +317,7 @@ protected:
                                     const std::array<std::pair<std::string, TValue>, count> values,
                                     TDb db)
     {
-        std::optional<DbRecord> record = db.FindRecord(key);
+        auto record = db.FindRecord(key);
 
         EXPECT(record);
 

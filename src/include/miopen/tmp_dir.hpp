@@ -1,8 +1,12 @@
+// Copyright © Advanced Micro Devices, Inc., or its affiliates.
+// SPDX-License-Identifier:  MIT
+
 #ifndef MIOPEN_GUARD_MLOPEN_TMP_DIR_HPP
 #define MIOPEN_GUARD_MLOPEN_TMP_DIR_HPP
 
-#include <miopen/config.hpp>
+#include <string_view>
 #include <miopen/filesystem.hpp>
+#include <miopen/config.hpp>
 
 namespace miopen {
 

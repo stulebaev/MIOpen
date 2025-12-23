@@ -37,8 +37,6 @@ bool ValidateGcnAssembler() { return true; }
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
-#include <sstream>
-
 #include <miopen/filesystem.hpp>
 #include <miopen/errors.hpp>
 #include <miopen/manage_ptr.hpp>
@@ -47,6 +45,7 @@ bool ValidateGcnAssembler() { return true; }
 #include <miopen/logger.hpp>
 #include <miopen/exec_utils.hpp>
 #include <miopen/temp_file.hpp>
+#include <sstream>
 
 #ifdef __linux__
 #include <paths.h>
@@ -56,6 +55,7 @@ bool ValidateGcnAssembler() { return true; }
 #include <unistd.h>
 #endif // __linux__
 
+#include <boost/filesystem/operations.hpp>
 namespace fs = miopen::fs;
 
 /// SWDEV-233338: hip-clang reports unknown target instead of amdgpu.
@@ -179,7 +179,7 @@ std::string AmdgcnAssemble(std::string_view source,
     std::ostringstream options;
     options << " -x assembler -target amdgcn--amdhsa";
 #if WORKAROUND_ISSUE_3001
-    if(target.Xnack().value_or(true))
+    if(!target.isXnackEnabled())
         options << " -mno-xnack";
 #endif
     /// \todo Hacky way to find out which CO version we need to assemble for.
@@ -253,7 +253,7 @@ static void AmdgcnAssembleQuiet(std::string_view source, std::string_view params
 
 static bool GcnAssemblerHasBug34765Impl()
 {
-    auto p = fs::temp_directory_path();
+    auto p = fs::temp_directory_path() / boost::filesystem::unique_path().string();
     miopen::WriteFile(miopen::GetKernelSrc("bugzilla_34765_detect.s"), p);
     const auto& src = p.string();
     try
@@ -276,7 +276,7 @@ static bool GcnAssemblerHasBug34765()
 
 static bool GcnAssemblerSupportsOption(const std::string& option)
 {
-    auto p = fs::temp_directory_path();
+    auto p = fs::temp_directory_path() / boost::filesystem::unique_path().string();
     miopen::WriteFile(miopen::GetKernelSrc("dummy_kernel.s"), p);
     const auto& src = p.string();
     try

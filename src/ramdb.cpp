@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2020 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,12 +32,11 @@
 
 #include <miopen/filesystem.hpp>
 
-#include <fstream>
 #include <chrono>
-#include <mutex>
+#include <ctime>
+#include <fstream>
 #include <map>
-#include <memory>
-#include <optional>
+#include <mutex>
 #include <sstream>
 
 namespace miopen {
@@ -351,29 +350,21 @@ void RamDb::Prefetch()
 #if MIOPEN_DB_CACHE_WRITE_THROUGH
 void RamDb::UpdateCacheEntryUnsafe(const DbRecord& record)
 {
-    const auto is_valid = ValidateUnsafe();
+    const auto& key = record.GetKey();
+    const auto it   = cache.find(key);
+    auto ss         = std::ostringstream{};
+    record.WriteIdsAndValues(ss);
 
-    if constexpr(!DisableUserDbFileIO)
-        UpdateDbModificationTime(GetFileName());
-
-    if(is_valid)
+    if(it != cache.end())
     {
-        const auto& key = record.GetKey();
-        const auto it   = cache.find(key);
-        auto ss         = std::ostringstream{};
-        record.WriteIdsAndValues(ss);
-
-        if(it != cache.end())
-        {
-            auto& item   = it->second;
-            item.content = ss.str();
-        }
-        else
-        {
-            cache.emplace(key, CacheItem{-1, ss.str()});
-        }
-        file_read_time = ramdb_clock::now();
+        auto& item   = it->second;
+        item.content = ss.str();
     }
+    else
+    {
+        cache.emplace(key, CacheItem{-1, ss.str()});
+    }
+    file_read_time = ramdb_clock::now();
 }
 #endif
 

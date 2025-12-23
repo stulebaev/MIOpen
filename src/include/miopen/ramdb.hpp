@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2020 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,9 +29,10 @@
 #include <miopen/db_record.hpp>
 
 #include <chrono>
-#include <string>
-#include <optional>
 #include <map>
+#include <optional>
+#include <string>
+#include <sstream>
 
 // Value of one enables experimental write-through feature of RamDb.
 // It provides some performance gain in case of multi-threaded cache write operations.
@@ -117,7 +118,7 @@ public:
     {
         DbRecord record(db_kind, problem_config);
         record.SetValues(id, values);
-        const bool ok = UpdateRecord(record);
+        const auto ok = UpdateRecord(record);
         if(ok)
             return record;
         else

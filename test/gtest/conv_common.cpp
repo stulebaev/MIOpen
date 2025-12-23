@@ -28,7 +28,6 @@
 
 bool get_handle_xnack()
 {
-    auto& handle  = get_handle();
-    auto is_xnack = handle.GetTargetProperties().Xnack();
-    return is_xnack.value_or(false);
+    auto& handle = get_handle();
+    return handle.GetTargetProperties().isXnackEnabled();
 }

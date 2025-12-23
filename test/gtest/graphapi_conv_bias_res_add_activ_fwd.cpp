@@ -23,6 +23,8 @@
  * SOFTWARE.
  *
  *******************************************************************************/
+#include <gtest/gtest.h>
+#include <gtest/gtest_common.hpp>
 #include <miopen/miopen.h>
 
 #include <miopen/graphapi/convolution.hpp>
@@ -34,9 +36,9 @@
 #include <miopen/graphapi/util.hpp>
 #include <miopen/graphapi/variant_pack.hpp>
 
-#include "gtest_common.hpp"
 #include "tensor_util.hpp"
 #include "get_handle.hpp"
+
 #include "conv3d_test_case.hpp"
 
 namespace gr = miopen::graphapi;

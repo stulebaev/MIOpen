@@ -41,7 +41,9 @@ namespace fs = miopen::fs;
 #endif
 
 #include "get_handle.hpp"
-#include "gtest_common.hpp"
+
+#include <gtest/gtest_common.hpp>
+#include <gtest/gtest.h>
 
 #include <cstdint>
 #include <string>

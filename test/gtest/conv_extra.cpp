@@ -25,9 +25,10 @@
  *******************************************************************************/
 #include "../conv2d.hpp"
 #include <miopen/miopen.h>
+#include <gtest/gtest_common.hpp>
+#include <gtest/gtest.h>
 #include <miopen/env.hpp>
 #include "get_handle.hpp"
-#include "gtest_common.hpp"
 
 MIOPEN_DECLARE_ENV_VAR_STR(MIOPEN_TEST_FLAGS_ARGS)
 
@@ -95,8 +96,8 @@ std::vector<std::string> GetTestCases(const std::string& float_arg)
     else
     {
         return common_test_cases;
-    } 
-    // clang-format on    
+    }
+    // clang-format on
 }
 
 using TestCase = decltype(GetTestCases(""))::value_type;
@@ -120,7 +121,6 @@ class GPU_conv_extra_I8 : public testing::TestWithParam<std::vector<TestCase>>
 {
     MIOPEN_DECLARE_GTEST_USES_TEST_DRIVE();
 };
-
 
 bool IsTestSupportedForDevice()
 {

@@ -26,20 +26,15 @@
 
 #pragma once
 
+#include <algorithm>
 #include <gtest/gtest.h>
-#include <miopen/env.hpp>
-
-#include <optional>
-#include <string>
 #include <iostream>
-#include <type_traits>
-#include <string_view>
-#include <ostream>
-#include <map>
+#include <iterator>
+#include <miopen/env.hpp>
 #include <tuple>
 #include <sstream>
-#include <iterator>
-#include <algorithm>
+#include <string>
+#include <vector>
 
 #include "../driver.hpp"
 #include "../lib_env_var.hpp"
@@ -125,6 +120,14 @@ inline void tuning_check(const std::string& err)
     default_check(err);
 }
 
+inline void compiler_check(const std::string& err)
+{
+    // the test should fail if kernel build failed.
+    EXPECT_FALSE(err.find("Error") != std::string::npos ||
+                 err.find("Code object build failed") != std::string::npos);
+    default_check(err);
+}
+
 inline void db_check(const std::string& err)
 {
     EXPECT_FALSE(err.find("Perf Db: record not found") != std::string::npos);
@@ -143,7 +146,8 @@ enum class Gpu : int
     gfx950  = 1 << 5,
     gfx103X = 1 << 6,
     gfx110X = 1 << 7,
-    gfx120X = 1 << 8,
+    gfx115X = 1 << 8,
+    gfx120X = 1 << 9,
     gfxLast = Gpu::gfx120X, // \note Change the value when adding a new device
     All     = -1
 };
@@ -199,7 +203,7 @@ public:
 
     // Add additional methods here if needed
     const std::string& Name() const override;
-    std::optional<bool> Xnack() const override;
+    bool isXnackEnabled() const override;
 
 private:
     std::string name;

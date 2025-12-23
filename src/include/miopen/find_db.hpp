@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2019 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,9 +37,9 @@
 #include <miopen/solution.hpp>
 #include <miopen/conv/solver_finders.hpp>
 
+#include <functional>
 #include <optional>
-#include <type_traits>
-#include <utility>
+#include <vector>
 
 MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_DEBUG_DISABLE_FIND_DB)
 
@@ -92,6 +92,7 @@ public:
                    const TProblemDescription& problem,
                    const std::string& path_suffix = "",
                    is_immediate_t<TTestDb>        = 0)
+        // NOLINTBEGIN (bugprone-unchecked-optional-access)
         : path(debug::testing_find_db_path_override().has_value()
                    ? debug::testing_find_db_path_override().value()
                    : GetUserPath(handle, path_suffix)),
@@ -99,8 +100,9 @@ public:
                              ? debug::testing_find_db_path_override().value()
                              : GetInstalledPath(handle, path_suffix)),
           db(construct_db(debug::testing_find_db_enabled &&
-                          !env::enabled(MIOPEN_DEBUG_DISABLE_FIND_DB),
+                              !env::enabled(MIOPEN_DEBUG_DISABLE_FIND_DB),
                           DbTimer<TDb>{DbKinds::FindDb, installed_path, path}))
+    // NOLINTEND (bugprone-unchecked-optional-access)
     {
         if(!db)
             return;
@@ -114,6 +116,7 @@ public:
                    const TProblemDescription& problem,
                    const std::string& path_suffix = "",
                    is_find_t<TTestDb>             = 0)
+        // NOLINTBEGIN (bugprone-unchecked-optional-access)
         : path(debug::testing_find_db_path_override().has_value()
                    ? debug::testing_find_db_path_override().value()
                    : GetUserPath(handle, path_suffix)),
@@ -121,9 +124,10 @@ public:
           db(std::optional<DbTimer<TDb>>{DbKinds::FindDb})
 #else
           db(construct_db(debug::testing_find_db_enabled &&
-                          !env::enabled(MIOPEN_DEBUG_DISABLE_FIND_DB),
+                              !env::enabled(MIOPEN_DEBUG_DISABLE_FIND_DB),
                           DbTimer<TDb>{DbKinds::FindDb, path, false}))
 #endif
+    // NOLINTEND (bugprone-unchecked-optional-access)
     {
         if(!db)
             return;
@@ -145,8 +149,8 @@ public:
     auto begin() { return content.value().As<FindDbData>().begin(); }
     auto end() const { return content.value().As<FindDbData>().end(); }
     auto end() { return content.value().As<FindDbData>().end(); }
-    bool empty() const { return !content.has_value(); }
     // NOLINTEND (bugprone-unchecked-optional-access)
+    bool empty() const { return !content.has_value(); }
 
     template <class TProblemDescription>
     static std::vector<Solution> TryLoad(const Handle& handle,
@@ -194,12 +198,13 @@ private:
     bool in_sync    = false;
     bool dont_store = false; // E.g. to skip writing sub-optimal find-db records to disk.
 
-    inline std::optional<DbTimer<TDb>> construct_db(bool cond, DbTimer<TDb>&& timer)
+    std::optional<DbTimer<TDb>> construct_db(bool cond, DbTimer<TDb>&& timer)
     {
         if(cond)
+        {
             return std::optional<DbTimer<TDb>>(std::move(timer));
-        else
-            return std::nullopt;
+        }
+        return std::nullopt;
     }
 
     static fs::path GetInstalledPath(const Handle& handle, const std::string& path_suffix);

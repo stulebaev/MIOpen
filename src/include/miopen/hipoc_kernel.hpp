@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2017 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,15 +29,13 @@
 #include <miopen/config.hpp>
 #include <miopen/errors.hpp>
 #include <miopen/hipoc_program.hpp>
+#include <miopen/stringutils.hpp>
 #include <miopen/op_kernel_args.hpp>
 
-#include <algorithm>
 #include <array>
-#include <string>
-#include <functional>
-#include <vector>
-#include <cstring>
 #include <cassert>
+#include <cstring>
+#include <vector>
 
 namespace miopen {
 
@@ -45,7 +43,7 @@ using HipEventPtr = MIOPEN_MANAGE_PTR(hipEvent_t, hipEventDestroy);
 inline HipEventPtr make_hip_event()
 {
     hipEvent_t result = nullptr;
-    (void)hipEventCreate(&result);
+    hipEventCreate(&result);
     return HipEventPtr{result};
 }
 

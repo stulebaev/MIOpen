@@ -25,19 +25,19 @@
  *******************************************************************************/
 #pragma once
 
+#include <random>
+
+#include <gtest/gtest.h>
 #include <miopen/miopen.h>
 #include <miopen/solver_id.hpp>
-
-#include "../serialize.hpp"
-#include "../fusionHost.hpp"
+#include <serialize.hpp>
+#include <fusionHost.hpp>
 
 #include "tensor_util.hpp"
 #include "conv_common.hpp"
 
 #include "conv_test_base.hpp"
 #include "conv_tensor_gen.hpp"
-
-#include <random>
 
 template <typename T = float, typename TestCaseType = ConvTestCaseBase>
 struct ConvActivInferTest : public ::testing::TestWithParam<std::tuple<miopenActivationMode_t,
@@ -91,11 +91,11 @@ protected:
     miopenActivationMode_t activ_mode;
     miopen::FusionPlanDescriptor fusePlanDesc;
     miopen::OperatorArgs params;
-    const float alpha = static_cast<float>(1.0f);
-    const float beta  = static_cast<float>(0);
-    float activ_alpha = static_cast<double>(0.25f);
-    float activ_beta  = static_cast<double>(0.75f);
-    float activ_gamma = static_cast<double>(0.5f);
+    const float alpha = 1.0f;
+    const float beta  = 0.0f;
+    float activ_alpha = 0.25f;
+    float activ_beta  = 0.75f;
+    float activ_gamma = 0.5f;
     miopenTensorLayout_t tensor_layout;
     using cfsb = ConvFwdSolverTestBase<T, T, TestCaseType>;
     Workspace wspace{};

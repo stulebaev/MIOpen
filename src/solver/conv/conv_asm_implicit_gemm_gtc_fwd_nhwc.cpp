@@ -510,12 +510,12 @@ void PerformanceConfigAsmImplicitGemmGTCFwdXdlopsNHWC::HeuristicInit(
     const int k           = ProblemInterpreter::GetOutputChannelK(problem);
     const int ho          = ProblemInterpreter::GetOutputHeightHo(problem);
     const int wo          = ProblemInterpreter::GetOutputWidthWo(problem);
-    const auto stride_h   = ProblemInterpreter::GetAdjustedConvolutionStrideH(problem);
-    const auto stride_w   = ProblemInterpreter::GetAdjustedConvolutionStrideW(problem);
-    const auto dilation_h = ProblemInterpreter::GetAdjustedConvolutionDilationH(problem);
-    const auto dilation_w = ProblemInterpreter::GetAdjustedConvolutionDilationW(problem);
+    const auto stride_h   = ProblemInterpreter::GetAdjustedAsmInputStrideH(problem);
+    const auto stride_w   = ProblemInterpreter::GetAdjustedAsmInputStrideW(problem);
     const auto pad_h      = ProblemInterpreter::GetInputLeftPadH(problem);
     const auto pad_w      = ProblemInterpreter::GetInputLeftPadW(problem);
+    const auto dilation_h = ProblemInterpreter::GetAdjustedConvolutionDilationH(problem);
+    const auto dilation_w = ProblemInterpreter::GetAdjustedConvolutionDilationW(problem);
     const int y           = ProblemInterpreter::GetFilterHeightY(problem);
     const int x           = ProblemInterpreter::GetFilterWidthX(problem);
     const auto group      = ProblemInterpreter::GetGroupCountG(problem);
@@ -699,12 +699,12 @@ bool PerformanceConfigAsmImplicitGemmGTCFwdXdlopsNHWC::IsValid(
     const int c           = ProblemInterpreter::GetInputChannelC(problem);
     const int k           = ProblemInterpreter::GetOutputChannelK(problem);
     const auto group      = ProblemInterpreter::GetGroupCountG(problem);
-    const auto stride_h   = ProblemInterpreter::GetAdjustedConvolutionStrideH(problem);
-    const auto stride_w   = ProblemInterpreter::GetAdjustedConvolutionStrideW(problem);
-    const auto dilation_h = ProblemInterpreter::GetAdjustedConvolutionDilationH(problem);
-    const auto dilation_w = ProblemInterpreter::GetAdjustedConvolutionDilationW(problem);
+    const auto stride_h   = ProblemInterpreter::GetAdjustedAsmInputStrideH(problem);
+    const auto stride_w   = ProblemInterpreter::GetAdjustedAsmInputStrideW(problem);
     const auto pad_h      = ProblemInterpreter::GetInputLeftPadH(problem);
     const auto pad_w      = ProblemInterpreter::GetInputLeftPadW(problem);
+    const auto dilation_h = ProblemInterpreter::GetAdjustedConvolutionDilationH(problem);
+    const auto dilation_w = ProblemInterpreter::GetAdjustedConvolutionDilationW(problem);
     const int y           = ProblemInterpreter::GetFilterHeightY(problem);
     const int x           = ProblemInterpreter::GetFilterWidthX(problem);
 
@@ -935,7 +935,7 @@ bool ConvAsmImplicitGemmGTCDynamicFwdXdlopsNHWC::IsApplicable(
         return false;
 
     const auto& target = ctx.GetStream().GetTargetProperties();
-    if(target.Xnack().value_or(true))
+    if(target.isXnackEnabled())
         return false;
 
     if(0 ==

@@ -38,9 +38,12 @@
 #include <miopen/write_file.hpp>
 #include <miopen/env.hpp>
 
+#include <cstdio>
+#include <cstring>
+#include <fstream>
+#include <optional>
 #include <string>
 #include <vector>
-#include <optional>
 
 MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_DEBUG_OPENCL_WAVE64_NOWGP)
 

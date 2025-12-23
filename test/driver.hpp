@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2017 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,39 +31,26 @@
 #include "get_handle.hpp"
 #include "network_data.hpp"
 #include "serialize.hpp"
+#include "tensor_holder.hpp"
 #include "test.hpp"
 #include "verify.hpp"
 
-#include <type_traits>
-#include <array>
-#include <numeric>
-#include <future>
 #include <functional>
-#include <vector>
-#include <string>
 #include <deque>
-#include <unordered_map>
-#include <utility>
-#include <initializer_list>
-#include <iostream>
-#include <sstream>
-#include <set>
-#include <algorithm>
-#include <stdexcept>
-#include <tuple>
-#include <iterator>
-#include <chrono>
-#include <cstdlib>
-
-#include <miopen/env.hpp>
-#include <miopen/md5.hpp>
-#include <miopen/rank.hpp>
-#include <miopen/type_name.hpp>
+#include <half/half.hpp>
+#include <type_traits>
+#include <miopen/filesystem.hpp>
 #include <miopen/functional.hpp>
 #include <miopen/expanduser.hpp>
-
+#include <miopen/md5.hpp>
+#include <miopen/type_name.hpp>
+#include <miopen/env.hpp>
+#include <miopen/rank.hpp>
+#include <miopen/bfloat16.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
+
+namespace env = miopen::env;
 
 template <class U, class T>
 constexpr std::is_same<T, U> is_same(const T&)
@@ -181,6 +168,8 @@ struct test_driver
     bool verbose           = false;
     double tolerance       = 80;
     bool time              = false;
+    int time_iter          = 1;
+    int warmup_iter        = 0;
     int batch_factor       = 0;
     bool no_validate       = false;
     int repeat             = 1;
@@ -188,6 +177,7 @@ struct test_driver
     bool disabled_cache    = false;
     bool dry_run           = false;
     int config_iter_start  = 0;
+    int config_iter_end    = -1;
     int iteration          = 0;
 
     argument& get_argument(const std::string& s)
@@ -196,10 +186,7 @@ struct test_driver
         return arguments.at(argument_index.at(s));
     }
 
-    inline bool has_argument(const std::string& arg) const
-    {
-        return (argument_index.count(arg) > 0);
-    }
+    bool has_argument(const std::string& arg) const { return argument_index.contains(arg); }
 
     template <class Visitor>
     void parse(Visitor v)
@@ -212,6 +199,8 @@ struct test_driver
         v(verbose, {"--verbose", "-v"}, "Run verbose mode");
         v(tolerance, {"--tolerance", "-t"}, "Set test tolerance");
         v(time, {"--time"}, "Time the kernel on GPU");
+        v(time_iter, {"--time-iter"}, "The number of iterations to average for timing the kernel");
+        v(warmup_iter, {"--warmup-iter"}, "The number of warmup iterations for timing the kernel");
         v(batch_factor, {"--batch-factor", "-n"}, "Set batch factor");
         v(no_validate,
           {"--disable-validation"},
@@ -225,6 +214,9 @@ struct test_driver
           {"--config-iter-start", "-i"},
           "index of config at which to start a test."
           "Can be used to restart a test after a failing config.");
+        v(config_iter_end,
+          {"--config-iter-end", "-e"},
+          "index of config at which to end a test (exclusive).");
     }
 
     struct per_arg
@@ -772,7 +764,7 @@ struct test_driver
         if(miopen::fs::exists(f) and not retry)
         {
             miss = false;
-            return detach_async([=] {
+            return miopen::detach_async([=] {
                 result_type result;
                 load(f.string(), result);
                 return result;
@@ -781,7 +773,7 @@ struct test_driver
         else
         {
             miss = true;
-            return then(cpu_async(v, xs...), [=](auto data) {
+            return miopen::then(cpu_async(v, xs...), [=](auto data) {
                 save(f.string(), data);
                 return data;
             });
@@ -833,17 +825,29 @@ struct test_driver
             // Compute gpu
             if(time)
             {
+                for(size_t i = 0; i < warmup_iter; ++i)
+                {
+                    v.gpu(xs...);
+                }
+
                 h.EnableProfiling();
                 h.ResetKernelTime();
             }
             gpu = v.gpu(xs...);
-            adjust_parameters(v);
-
             if(time)
             {
-                std::cout << "Kernel time: " << h.GetKernelTime() << " ms" << std::endl;
+                float total_time = h.GetKernelTime();
+                for(size_t i = 1; i < time_iter; ++i)
+                {
+                    h.ResetKernelTime();
+                    v.gpu(xs...);
+                    total_time += h.GetKernelTime();
+                }
+                std::cout << "Kernel time: " << (total_time / time_iter) << " ms" << std::endl;
                 h.EnableProfiling(false);
             }
+            adjust_parameters(v);
+
             // Validate
             if(!no_validate)
             {
@@ -953,8 +957,13 @@ struct test_driver
     template <class Derived>
     void base_run()
     {
-        if(this->iteration >= this->config_iter_start)
+        if(this->iteration >= this->config_iter_start &&
+           (this->config_iter_end < 0 || this->iteration < this->config_iter_end))
         {
+            if(this->time && !this->verbose)
+            {
+                std::cout << "Iteration: " << this->iteration << std::endl;
+            }
             if(this->dry_run)
             {
                 std::cout << "Iteration: " << this->iteration << std::endl;
@@ -1057,7 +1066,7 @@ void check_unparsed_args(Driver& d,
                 std::cerr << "    " << s << std::endl;
             std::abort();
         }
-        else if(keywords.count(p.first) == 0)
+        else if(!keywords.contains(p.first))
         {
             assert(p.first.length() > 2);
             auto name = p.first.substr(2);
@@ -1132,7 +1141,7 @@ build_configs(Driver& d,
               std::unordered_map<std::string, std::vector<std::string>>& arg_map,
               std::set<std::string>& keywords)
 {
-    std::cout << "Building configs...";
+    std::cout << "Building configs..." << std::endl;
     std::vector<std::vector<std::string>> configs;
 
     d.parse(parser{arg_map});
@@ -1260,7 +1269,7 @@ void test_drive_impl_1(std::string program_name, std::vector<std::string> as)
         "--help", "-h", "--half", "--float", "--double", "--int8", "--bfloat16"};
     d.parse(keyword_set{keywords});
     auto arg_map = args::parse(as, [&](std::string x) {
-        return (keywords.count(x) > 0) or ((x.find("--") == 0) and d.has_argument(x.substr(2)));
+        return (keywords.contains(x)) or ((x.starts_with("--")) and d.has_argument(x.substr(2)));
     });
 
     if(arg_map.count("--half") > 0)

@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2019 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -166,14 +166,14 @@ fs::path FindDbRecord_t<TDb>::GetInstalledPathFile(const Handle& handle,
                     const auto fname = entry.stem().string();
                     MIOPEN_LOG_I("Checking find db file: " << fname);
                     // Check for alternate back end same ASIC
-                    if(fname.find(base_name) == 0)
+                    if(fname.starts_with(base_name))
                     {
                         return entry;
                     }
                     if(db_id.empty() || !miopen::StartsWith(db_id, "gfx") || real_cu_count == 0)
                         return fs::path{};
                     // Check for alternate ASIC any back end
-                    if(fname.find(db_id) == 0)
+                    if(fname.starts_with(db_id))
                     {
                         const auto pos = fname.find('_');
                         int cur_count  = -1;

@@ -28,6 +28,7 @@
 
 #include <miopen/filesystem.hpp>
 #include <memory>
+#include <string>
 
 namespace fs = miopen::fs;
 

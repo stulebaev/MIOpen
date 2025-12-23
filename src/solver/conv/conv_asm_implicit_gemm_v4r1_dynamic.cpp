@@ -324,8 +324,9 @@ bool ConvAsmImplicitGemmV4R1DynamicFwd::IsApplicable(const ExecutionContext& ctx
         return false;
 
     const auto& target = ctx.GetStream().GetTargetProperties();
-    if(target.Xnack().value_or(true))
+    if(target.isXnackEnabled())
         return false;
+
     auto tunables = GetImplicitGemmV4R1DynamicTunables();
     return !std::none_of(tunables.begin(), tunables.end(), [&](auto tunable) {
         return tunable.IsValid(ctx, problem);
@@ -346,6 +347,9 @@ bool ConvAsmImplicitGemmV4R1DynamicFwd_1x1::IsApplicable(const ExecutionContext&
         return false;
 
     if(!problem.IsDirectionForward())
+        return false;
+
+    if(problem.HasNonPackedTensors())
         return false;
 
     if(!problem.Is2d())
@@ -371,8 +375,9 @@ bool ConvAsmImplicitGemmV4R1DynamicFwd_1x1::IsApplicable(const ExecutionContext&
         return false;
 
     const auto& target = ctx.GetStream().GetTargetProperties();
-    if(target.Xnack().value_or(true))
+    if(target.isXnackEnabled())
         return false;
+
     auto tunables = GetImplicitGemmV4R1DynamicTunables();
     return !std::none_of(tunables.begin(), tunables.end(), [&](auto tunable) {
         return tunable.IsValid(ctx, problem);
@@ -390,7 +395,7 @@ static inline ConvSolution GetSolutionBase(const ExecutionContext& ctx,
 
     int block_size     = GetImplicitGemmV4R1DynamicBlockSize(config);
     int grid_size      = GetImplicitGemmV4R1DynamicGridSize(problem, config);
-    bool kernel_is_1x1 = (kernel_name.find("igemm_v4r1_1x1_dynamic") == 0);
+    bool kernel_is_1x1 = (kernel_name.starts_with("igemm_v4r1_1x1_dynamic"));
 
     KernelInfo kernel;
     std::ostringstream options;

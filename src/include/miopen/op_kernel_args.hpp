@@ -1,3 +1,6 @@
+// Copyright © Advanced Micro Devices, Inc., or its affiliates.
+// SPDX-License-Identifier:  MIT
+
 #ifndef MIOPEN_GUARD_MLOPEN_OP_KERNEL_ARGS_HPP
 #define MIOPEN_GUARD_MLOPEN_OP_KERNEL_ARGS_HPP
 
@@ -18,16 +21,14 @@ struct OpKernelArg
     }
 
     template <typename T>
-    OpKernelArg(T* arg) // NOLINT
-        : buffer(sizeof(T*))
+    OpKernelArg(T* arg) : buffer(sizeof(T*))
     {
         *(reinterpret_cast<T**>(buffer.data())) = arg;
         is_ptr                                  = true;
     }
 
-    std::size_t size() const { return buffer.size(); }
-    //boost::container::small_vector<char, 8> buffer;
-    std::vector<char> buffer = {' ',' ',' ',' ',' ',' ',' ',' '};
+    std::size_t size() const { return buffer.size(); };
+    std::vector<char> buffer;
     bool is_ptr = false;
 };
 

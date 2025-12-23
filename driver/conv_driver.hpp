@@ -49,18 +49,16 @@
 #include <miopen/conv/solvers.hpp>
 #include <miopen/tensor.hpp>
 
-#include "../test/cpu_bias.hpp"
-#include "../test/cpu_conv.hpp"
-#include "../test/serialize.hpp"
-#include "../test/tensor_holder.hpp"
-#include "../test/verify.hpp"
+#include <../test/cpu_bias.hpp>
+#include <../test/cpu_conv.hpp>
+#include <../test/tensor_holder.hpp>
+#include <../test/verify.hpp>
 
 #include <boost/range/adaptors.hpp>
 
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
-#include <float.h>
 #include <fstream>
 #include <memory>
 #include <optional>
@@ -404,6 +402,7 @@ private:
     bool is_gpualloc           = false;
     bool init_output_nan       = false;
     GPUMem::Check buffer_check = GPUMem::Check::None;
+    int tuning_policy          = 0;
 
     int num_iterations = 1;
 
@@ -705,6 +704,12 @@ int ConvDriver<Tgpu, Tref>::ParseCmdLineArgs(int argc, char* argv[])
     init_output_nan = (inflags.GetValueInt("init_output_nan") == 1);
 
     buffer_check = GetGpuBufferCheck(inflags);
+
+    tuning_policy = inflags.GetValueInt("tuning_policy");
+    if(tuning_policy != 0)
+    {
+        miopenSetTuningPolicy(GetHandle(), static_cast<miopenTuningPolicy_t>(tuning_policy));
+    }
 
     return 0;
 }
@@ -1008,6 +1013,11 @@ int ConvDriver<Tgpu, Tref>::AddCmdLineArgs()
         "wei_cast_type", 'R', "-1", "Cast type for weight tensor, default to not set", "string");
     inflags.AddInputFlag(
         "init_output_nan", 'N', "0", "populate output buffers with nan values (Default=0)", "int");
+    inflags.AddInputFlag("tuning_policy",
+                         '&',
+                         "0",
+                         "MIOpen tuning policy (Default=0, or no tuning policy set)",
+                         "int");
 
     return 0;
 }

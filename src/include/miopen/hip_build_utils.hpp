@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2019 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -59,18 +59,18 @@ public:
     LcOptionTargetStrings(const TargetProperties& target)
         : device(target.Name()),
           xnack([&]() -> std::string {
-              if(target.Xnack())
-                  return std::string{":xnack"} + (*target.Xnack() ? "+" : "-");
+              if(target.xnack.isReported())
+                  return std::string{":xnack"} + (target.isXnackEnabled() ? "+" : "-");
               return {};
           }()),
           sramecc([&]() -> std::string {
-              if(target.Sramecc())
-                  return std::string{":sramecc"} + (*target.Sramecc() ? "+" : "-");
+              if(target.sramecc.isReported())
+                  return std::string{":sramecc"} + (target.sramecc.isEnabled() ? "+" : "-");
               return {};
           }()),
           sramecc_reported([&]() -> std::string {
-              if(target.SrameccReported())
-                  return std::string{":sramecc"} + (*target.SrameccReported() ? "+" : "-");
+              if(target.sramecc.isReported())
+                  return std::string{":sramecc"} + (target.sramecc.isReported() ? "+" : "-");
               return {};
           }()),
 #if MIOPEN_USE_COMGR

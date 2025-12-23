@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2025 Advanced Micro Devices, Inc.
+ * Copyright (c) 2017 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -118,6 +118,8 @@ public:
         Hybrid               = miopenConvolutionFindModeHybrid,
         DeprecatedFastHybrid = 4,
         DynamicHybrid        = miopenConvolutionFindModeDynamicHybrid,
+        TrustVerify          = miopenConvolutionFindModeTrustVerify,
+        TrustVerifyFull      = miopenConvolutionFindModeTrustVerifyFull,
         End_,
         Default_ = miopenConvolutionFindModeDefault,
     };
@@ -151,13 +153,35 @@ public:
     template <class Context>
     bool IsHybrid(const Context& context) const
     {
-        return (value == Values::Hybrid || value == Values::DynamicHybrid) && IsEnabled(context);
+        return (value == Values::Hybrid || value == Values::DynamicHybrid ||
+                value == Values::TrustVerify || value == Values::TrustVerifyFull) &&
+               IsEnabled(context);
     }
 
     template <class Context>
     bool IsDynamicHybrid(const Context& context) const
     {
-        return value == Values::DynamicHybrid && IsEnabled(context);
+        return (value == Values::DynamicHybrid || value == Values::TrustVerify ||
+                value == Values::TrustVerifyFull) &&
+               IsEnabled(context);
+    }
+
+    template <class Context>
+    bool IsTrustVerify(const Context& context) const
+    {
+        // TrustVerify uses user db as groud truth, disable if no user db
+#if MIOPEN_DISABLE_USERDB
+        return false;
+#else
+        return (value == Values::TrustVerify || value == Values::TrustVerifyFull) &&
+               IsEnabled(context);
+#endif
+    }
+
+    template <class Context>
+    bool IsExhaustive(const Context& context) const
+    {
+        return (value == Values::TrustVerifyFull) && IsEnabled(context);
     }
 
     MIOPEN_INTERNALS_EXPORT friend std::ostream& operator<<(std::ostream&, const FindMode&);

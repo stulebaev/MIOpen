@@ -39,12 +39,11 @@
 #include <miopen/softmax/problem_description.hpp>
 #include <miopen/softmax/solvers.hpp>
 
-#include <miopen/fusion/problem_description.hpp>
-#include <miopen/fusion/context.hpp>
-
 #include <nlohmann/json.hpp>
 
 #include <boost/hof/match.hpp>
+#include "miopen/fusion/problem_description.hpp"
+#include "miopen/fusion/context.hpp"
 
 namespace miopen::debug {
 // Todo: This should be updated when a separate driver command is implemented
@@ -269,7 +268,9 @@ void Solution::RunImpl(const Handle& handle,
         checkNumericsOutput_();
     }
     else
+    {
         MIOPEN_LOG_E("Error: solution without invoker factory.");
+    }
 }
 
 void Solution::RunImpl(const Handle& handle,
@@ -432,7 +433,9 @@ void Solution::RunImpl(const Handle& handle,
             (*invoker)(handle, invoke_ctx);
         }
         else
+        {
             MIOPEN_LOG_E("Error: solution without invoker factory.");
+        }
 
         return;
     }
@@ -454,13 +457,15 @@ void Solution::RunImpl(const Handle& handle,
 
     if(mha_solution.invoker_factory.has_value())
     {
-        invoker = handle.PrepareInvoker(*mha_solution.invoker_factory,
-                                        mha_solution.construction_params);
+        invoker =
+            handle.PrepareInvoker(*mha_solution.invoker_factory, mha_solution.construction_params);
         handle.RegisterInvoker(*invoker, net_cfg, GetSolver().ToString());
         (*invoker)(handle, invoke_ctx);
     }
     else
+    {
         MIOPEN_LOG_E("Error: solution without invoker factory.");
+    }
 }
 
 void Solution::RunImpl(const Handle& handle,
@@ -540,8 +545,16 @@ void Solution::RunImpl(const Handle& handle,
                                           : attnSoftmax.GetSolution(ctx, problem_description);
         auto kernel_handles         = std::vector<Kernel>{std::begin(kernels), std::end(kernels)};
 
-        invoker = (*softmax_solution.invoker_factory)(kernel_handles);
-        (*invoker)(handle, invoke_ctx);
+        if(softmax_solution.invoker_factory.has_value())
+        {
+            invoker = (*softmax_solution.invoker_factory)(kernel_handles);
+            (*invoker)(handle, invoke_ctx);
+        }
+        else
+        {
+            MIOPEN_LOG_E("Error: solution without invoker factory.");
+        }
+
         return;
     }
 
@@ -568,7 +581,9 @@ void Solution::RunImpl(const Handle& handle,
         (*invoker)(handle, invoke_ctx);
     }
     else
+    {
         MIOPEN_LOG_E("Error: solution without invoker factory.");
+    }
 }
 
 void Solution::RunImpl(const Handle& handle,
@@ -607,8 +622,16 @@ void Solution::RunImpl(const Handle& handle,
             MakeFusedSolution(ctx, solver, perf_cfg, fusion_problem, invoke_params);
         auto kernel_handles = std::vector<Kernel>{std::begin(kernels), std::end(kernels)};
 
-        invoker = (*solution.invoker_factory)(kernel_handles);
-        (*invoker)(handle, invoke_params);
+        if(solution.invoker_factory.has_value())
+        {
+            invoker = (*solution.invoker_factory)(kernel_handles);
+            (*invoker)(handle, invoke_params);
+        }
+        else
+        {
+            MIOPEN_LOG_E("Error: solution without invoker factory.");
+        }
+
         return;
     }
 
@@ -631,7 +654,9 @@ void Solution::RunImpl(const Handle& handle,
         (*invoker)(handle, invoke_params);
     }
     else
+    {
         MIOPEN_LOG_E("Error: solution without invoker factory.");
+    }
 }
 
 AnyInvokeParams Solution::MakeInvokeParams(const Problem& problem_,
@@ -655,23 +680,20 @@ AnyInvokeParams Solution::MakeInvokeParams(const Problem& problem_,
     switch(problem_.GetDirection())
     {
     case miopenProblemDirectionForward:
-        return conv::DataInvokeParams(
-            {x_d, x.buffer, w_d, w.buffer, y_d, y.buffer},
-            workspace,
-            workspace_size,
-            conv_desc.attribute.gfx90aFp16alt.GetFwd());
+        return conv::DataInvokeParams({x_d, x.buffer, w_d, w.buffer, y_d, y.buffer},
+                                      workspace,
+                                      workspace_size,
+                                      conv_desc.attribute.gfx90aFp16alt.GetFwd());
     case miopenProblemDirectionBackward:
-        return conv::DataInvokeParams(
-            {y_d, y.buffer, w_d, w.buffer, x_d, x.buffer},
-            workspace,
-            workspace_size,
-            conv_desc.attribute.gfx90aFp16alt.GetBwd());
+        return conv::DataInvokeParams({y_d, y.buffer, w_d, w.buffer, x_d, x.buffer},
+                                      workspace,
+                                      workspace_size,
+                                      conv_desc.attribute.gfx90aFp16alt.GetBwd());
     case miopenProblemDirectionBackwardWeights:
-        return conv::WrWInvokeParams{
-            {y_d, y.buffer, x_d, x.buffer, w_d, w.buffer},
-            workspace,
-            workspace_size,
-            conv_desc.attribute.gfx90aFp16alt.GetWrW()};
+        return conv::WrWInvokeParams{{y_d, y.buffer, x_d, x.buffer, w_d, w.buffer},
+                                     workspace,
+                                     workspace_size,
+                                     conv_desc.attribute.gfx90aFp16alt.GetWrW()};
     default: MIOPEN_THROW(miopenStatusNotImplemented);
     }
 }

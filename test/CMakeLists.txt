@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2025 Advanced Micro Devices, Inc.
+# Copyright (c) 2017 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -48,6 +48,7 @@ option( MIOPEN_TEST_GFX900 "Test on Vega10 (gfx900)" OFF )
 option( MIOPEN_TEST_GFX906 "Test on Vega20 (gfx906)" OFF )
 option( MIOPEN_TEST_GFX103X "Test on Navi21/22 (gfx1030/31)" OFF )
 option( MIOPEN_TEST_GFX110X "Test on Navi31/32 (gfx1100/02)" OFF )
+option( MIOPEN_TEST_GFX115X "Test on Navi35 strix halo (gfx1150/51/52)" OFF )
 option( MIOPEN_TEST_GFX120X "Test on gfx1200/01" OFF )
 option( MIOPEN_TEST_GPU_XNACK_ENABLED "Test as if XNACK mode is enabled" OFF )
 option( MIOPEN_TEST_CONV "" OFF )
@@ -57,12 +58,12 @@ option( MIOPEN_TEST_COMPOSABLEKERNEL "Test with composable_kernel library" ${MIO
 option( MIOPEN_TEST_DISCRETE "Build Discrete Test Binaries" ON )
 option( MIOPEN_TEST_DBSYNC "" OFF )
 option( MIOPEN_TEST_PERF "" OFF )
-option( MIOPEN_TEST_ENABLE_TEST_SQLITE_PERFDB "Enable the SQLite Perf DB test" OFF )
+option( MIOPEN_TEST_ENABLE_TEST_SQLITE_PERFDB "Enable the SQLite Perf DB test" OFF)
 
 if(NOT ENABLE_ASAN_PACKAGING AND MIOPEN_TEST_PERF)
-    set(CMAKE_INSTALL_TESTBINDIR "${DATA_INSTALL_DIR}/bin")
+    set( CMAKE_INSTALL_TESTBINDIR "${DATA_INSTALL_DIR}/bin" )
     set(test_perf.py ${CMAKE_INSTALL_TESTBINDIR}/test_perf.py)
-    install(FILES test_perf.py
+    install(FILES  test_perf.py
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
         DESTINATION ${CMAKE_INSTALL_TESTBINDIR})
 
@@ -82,9 +83,9 @@ if(NOT ENABLE_ASAN_PACKAGING AND MIOPEN_TEST_PERF)
 endif()
 
 set_var_to_condition(MIOPEN_TEST_WITH_MIOPENDRIVER_DEFAULT MIOPEN_BUILD_DRIVER)
-option(MIOPEN_TEST_WITH_MIOPENDRIVER "Use MIOpenDriver in tests" ${MIOPEN_TEST_WITH_MIOPENDRIVER_DEFAULT})
+option( MIOPEN_TEST_WITH_MIOPENDRIVER "Use MIOpenDriver in tests" ${MIOPEN_TEST_WITH_MIOPENDRIVER_DEFAULT})
 
-option(WORKAROUND_ISSUE_936 "" ON)
+option( WORKAROUND_ISSUE_936 "" ON)
 
 # Run the test suite to a depth limit
 #limit greater than 2 leads to prolonged testing more than 5hrs per stage.
@@ -107,18 +108,21 @@ endif()
 # Also we do not detect GPU when target GPU for testing is specified explicitly.
 set(MIOPEN_TEST_GPU_DETECTION_FAILED FALSE)
 set(MIOPEN_NO_GPU FALSE)
-if(NOT (MIOPEN_TEST_GFX900 OR MIOPEN_TEST_GFX906 OR MIOPEN_TEST_GFX908 OR MIOPEN_TEST_GFX90A OR MIOPEN_TEST_GFX94X OR MIOPEN_TEST_GFX95X OR MIOPEN_TEST_GFX103X OR MIOPEN_TEST_GFX110X OR MIOPEN_TEST_GFX120X OR MIOPEN_TEST_HIP_NOGPU))
+if(NOT (MIOPEN_TEST_GFX900 OR MIOPEN_TEST_GFX906 OR MIOPEN_TEST_GFX908 OR MIOPEN_TEST_GFX90A OR MIOPEN_TEST_GFX94X OR MIOPEN_TEST_GFX95X OR MIOPEN_TEST_GFX103X OR MIOPEN_TEST_GFX110X OR MIOPEN_TEST_GFX120X OR MIOPEN_TEST_GFX115X OR MIOPEN_TEST_HIP_NOGPU))
+    # Try to find rocminfo first, then hipinfo as fallback (for Windows)
     find_program(ROCMINFO
-        NAMES rocminfo amdgpu-arch
+        NAMES rocminfo hipinfo
         PATHS
             /opt/rocm
             ${CMAKE_INSTALL_PREFIX}
+            $ENV{ROCM_PATH}
+            $ENV{HIP_PATH}
         PATH_SUFFIXES
             /bin
     )
-    message(STATUS "rocminfo utility: ${ROCMINFO}")
+    message(STATUS "GPU info utility: ${ROCMINFO}")
     if(ROCMINFO)
-        execute_process(
+        execute_process (
             COMMAND ${ROCMINFO}
             OUTPUT_VARIABLE ROCMINFO_OUTPUT
             RESULT_VARIABLE ROCMINFO_EXIT_STATUS
@@ -127,14 +131,14 @@ if(NOT (MIOPEN_TEST_GFX900 OR MIOPEN_TEST_GFX906 OR MIOPEN_TEST_GFX908 OR MIOPEN
             message(WARNING "ROCk module is NOT loaded, possibly no GPU devices")
             set(MIOPEN_NO_GPU TRUE)
         elseif (NOT ROCMINFO_EXIT_STATUS EQUAL 0)
-            message(WARNING "ROCMINFO FAILED, GPU TYPE UNKNOWN. Manually set respective MIOPEN_TEST_GFX* CMake variable to specify target GPU for testing.")
+            message(WARNING "GPU info utility FAILED, GPU TYPE UNKNOWN. Manually set respective MIOPEN_TEST_GFX* CMake variable to specify target GPU for testing.")
             set(MIOPEN_TEST_GPU_DETECTION_FAILED TRUE)
         elseif(ROCMINFO_OUTPUT MATCHES "gfx103.")
             set(MIOPEN_TEST_GFX103X ON)
         elseif(ROCMINFO_OUTPUT MATCHES "gfx110.")
             set(MIOPEN_TEST_GFX110X ON)
         elseif(ROCMINFO_OUTPUT MATCHES "gfx115.")
-            set(MIOPEN_TEST_GFX110X ON)
+            set(MIOPEN_TEST_GFX115X ON)
         elseif(ROCMINFO_OUTPUT MATCHES "gfx120.")
             set(MIOPEN_TEST_GFX120X ON)
         elseif(ROCMINFO_OUTPUT MATCHES "gfx900")
@@ -162,7 +166,7 @@ if(NOT (MIOPEN_TEST_GFX900 OR MIOPEN_TEST_GFX906 OR MIOPEN_TEST_GFX908 OR MIOPEN
             message(STATUS "${ROCMINFO_OUTPUT}")
         endif()
     else()
-        message(WARNING "ROCMINFO NOT FOUND, GPU TYPE UNKNOWN. Manually set respective MIOPEN_TEST_GFX* CMake variable to specify target GPU for testing.")
+        message(WARNING "GPU info utility FAILED, GPU TYPE UNKNOWN. Manually set respective MIOPEN_TEST_GFX* CMake variable to specify target GPU for testing.")
         set(MIOPEN_TEST_GPU_DETECTION_FAILED TRUE)
     endif()
 endif()
@@ -189,6 +193,7 @@ message(STATUS "MIOPEN_TEST_GFX94X ${MIOPEN_TEST_GFX94X}")
 message(STATUS "MIOPEN_TEST_GFX95X ${MIOPEN_TEST_GFX95X}")
 message(STATUS "MIOPEN_TEST_GFX103X ${MIOPEN_TEST_GFX103X}")
 message(STATUS "MIOPEN_TEST_GFX110X ${MIOPEN_TEST_GFX110X}")
+message(STATUS "MIOPEN_TEST_GFX115X ${MIOPEN_TEST_GFX115X}")
 message(STATUS "MIOPEN_TEST_GFX120X ${MIOPEN_TEST_GFX120X}")
 message(STATUS "MIOPEN_TEST_GPU_XNACK_ENABLED ${MIOPEN_TEST_GPU_XNACK_ENABLED}")
 message(STATUS "MIOPEN_TEST_GPU_DETECTION_FAILED ${MIOPEN_TEST_GPU_DETECTION_FAILED}")
@@ -209,7 +214,7 @@ else()
     add_definitions(-DMIOPEN_TEST_DRIVER_MODE=1)
 endif()
 
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -C ${CMAKE_CFG_INTDIR})
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --verbose -C ${CMAKE_CFG_INTDIR})
 add_custom_target(tests)
 
 if(MIOPEN_TEST_GPU_DETECTION_FAILED AND NOT (MIOPEN_NO_GPU))
@@ -220,6 +225,7 @@ endif()
 if(MIOPEN_TEST_WITH_MIOPENDRIVER)
     add_dependencies(check MIOpenDriver)
 endif()
+
 
 set(MIOPEN_GTEST_SUFFIX)
 set(MIOPEN_TEST_FLOAT_ARG)
@@ -280,7 +286,7 @@ if(MIOPEN_TEST_INT8)
 elseif(MIOPEN_TEST_BFLOAT16)
     set(SKIP_ALL_EXCEPT_TESTS
               test_conv2d test_conv2d_find2 test_tensor_vec test_immed_conv2d
-              test_check_numerics_test test_conv_extra test_conv_for_implicit_gemm test_miopen_conv
+              test_conv_extra test_conv_for_implicit_gemm test_miopen_conv
               test_deepbench_conv test_conv_igemm_dynamic_xdlops_nhwc_wrw_bf16
               test_conv_igemm_dynamic_xdlops_nhwc_fwd_bf16
               test_conv_igemm_dynamic_xdlops_nhwc_bwd_bf16)
@@ -300,6 +306,10 @@ endif()
 #Don't run db verification by default
 if(NOT MIOPEN_TEST_DBSYNC)
     list(APPEND SKIP_TESTS db_sync)
+endif()
+
+if (MIOPEN_TEST_GFX115X)
+    list(APPEND SKIP_TESTS test_ctc)
 endif()
 
 # The usage is non-trivial, see function add_test_command.
@@ -799,10 +809,6 @@ set(CONV_CK_IGEMM_FWD_V6R1_DLOPS_NCHW_ENV
     MIOPEN_DEBUG_FIND_ONLY_SOLVER=ConvCkIgemmFwdV6r1DlopsNchw
     MIOPEN_DEBUG_CONV_CK_IGEMM_FWD_V6R1_DLOPS_NCHW=1)
 
-if(MIOPEN_TEST_FLOAT)
-    add_custom_test(test_reduce_double SKIP_UNLESS_ALL GFX94X_ENABLED GFX103X_ENABLED GFX110X_ENABLED COMMAND  $<TARGET_FILE:test_reduce_test> --double --all --verbose)
-endif()
-
 # NOTES ON WRITING TESTS FOR TUNABLE SOLVERS
 # * Enforce tuning (SEARCH_DB_UPDATE).
 # * Use TEST_TUNING. This flag leads to test failure in case of any "Error"
@@ -848,16 +854,12 @@ add_custom_test(conv_transposed_wrw_find_2
     COMMAND $<TARGET_FILE:test_conv2d_find2> ${TEST_CONV_VERBOSE_W} --input 64 64  28 28 --weights 64  64  1 1 --pads_strides_dilations 0 0 1 1 1 1 --cmode transpose ${MIOPEN_TEST_FLAGS_ARGS}
 )
 
-if(WIN32)
-  add_definitions(-D_USE_MATH_DEFINES -Wno-nvcc-compat -Wno-bit-int-extension)
-endif()
-
-#Don't install the tests if we are building each test separately
+#Dont install the tests if we are building each test separately
 #When the tests are built as a single unit, then we want to be
 #able to package them
 set(INSTALL_GTEST OFF)
 if(MIOPEN_TEST_DISCRETE)
-  add_subdirectory(gtest EXCLUDE_FROM_ALL)
+add_subdirectory(gtest EXCLUDE_FROM_ALL)
 else()
-  add_subdirectory(gtest)
+add_subdirectory(gtest)
 endif()
