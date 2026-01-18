@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2019 Advanced Micro Devices, Inc.
+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,6 @@
 #include <miopen/process.hpp>
 
 #include <thread>
-#include <string_view>
 #include <random>
 
 MIOPEN_DECLARE_ENV_VAR_BOOL(MIOPEN_DEBUG_SAVE_TEMP_DIR)
@@ -42,7 +41,6 @@ TmpDir::TmpDir(std::string_view prefix) : path{fs::temp_directory_path()}
 {
     std::string p{prefix.empty() ? "" : (prefix[0] == '-' ? "" : "-")};
 
-    //path /= boost::filesystem::unique_path("miopen" + p.append(prefix) + "-%%%%-%%%%-%%%%-%%%%").string();
     std::mt19937 prng(std::random_device{}());
     std::uniform_int_distribution<int> rand;
     path /= fs::temp_directory_path() + "miopen" + p.append(prefix) + std::format("-{:x}", rand(prng));
