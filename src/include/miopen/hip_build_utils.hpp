@@ -32,8 +32,6 @@
 #include <miopen/tmp_dir.hpp>
 #include <miopen/write_file.hpp>
 
-#include <string>
-
 namespace miopen {
 
 fs::path HipBuild(const TmpDir& tmp_dir,

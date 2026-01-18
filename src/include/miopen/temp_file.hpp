@@ -29,8 +29,6 @@
 
 #include <miopen/tmp_dir.hpp>
 
-#include <string>
-
 namespace miopen {
 
 class MIOPEN_INTERNALS_EXPORT TempFile
