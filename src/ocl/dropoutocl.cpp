@@ -32,12 +32,11 @@
 #include <miopen/kernel_cache.hpp>
 #include <miopen/tensor.hpp>
 #include <miopen/datatype.hpp>
+#include <miopen/dropout_util.hpp>
 #include <vector>
 #include <numeric>
 #include <algorithm>
 #include <iostream>
-
-#include "../../test/dropout_util.hpp"
 
 #define DROPOUT_DEBUG 0
 

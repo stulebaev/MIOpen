@@ -1,6 +1,6 @@
 # Find amd_comgr
 
-find_path(AMD_COMGR_INCLUDE_DIR amd_comgr.h PATHS ${PROJECT_SOURCE_DIR}/build PATH_SUFFIXES include/amd_comgr)
+find_path(AMD_COMGR_INCLUDE_DIR amd_comgr.h PATHS $ENV{HIP_PATH} PATH_SUFFIXES include/amd_comgr)
 mark_as_advanced(AMD_COMGR_INCLUDE_DIR)
 
 if(AMD_COMGR_INCLUDE_DIR)
@@ -16,6 +16,7 @@ if(AMD_COMGR_INCLUDE_DIR)
     string(REGEX MATCH "[0-9]" amd_comgr_VERSION_MINOR "${_ver_line}")
     unset(_ver_line)
     set(amd_comgr_VERSION "${amd_comgr_VERSION_MAJOR}.${amd_comgr_VERSION_MINOR}")
+    set(amd_comgr_LIBRARY amd_comgr_${amd_comgr_VERSION_MAJOR})
 endif()
 
 

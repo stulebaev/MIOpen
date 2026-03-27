@@ -25,6 +25,7 @@
  *******************************************************************************/
 #include <miopen/temp_file.hpp>
 #include <miopen/errors.hpp>
+#include <miopen/filesystem.hpp>
 #include <fstream>
 
 namespace miopen {

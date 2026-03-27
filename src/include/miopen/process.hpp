@@ -30,6 +30,7 @@
 #include <miopen/config.hpp>
 #include <miopen/filesystem.hpp>
 #include <memory>
+#include <string_view>
 #include <map>
 
 namespace miopen {

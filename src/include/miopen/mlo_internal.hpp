@@ -24,7 +24,7 @@
  *
  *******************************************************************************/
 /**********************************************************************
-Copyright (c)2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted
 provided that the following conditions are met:
@@ -50,11 +50,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef MLO_INTERNAL_H_
 #define MLO_INTERNAL_H_
 
-// Header Files
-#ifndef NOMINMAX
-#define NOMINMAX // stupid windows.h confused with min() macros in std namespace
-#endif
-
 #include <miopen/config.hpp>
 
 #if MIOPEN_BACKEND_OPENCL
@@ -70,43 +65,17 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <miopen/conv/problem_description.hpp>
 #include <miopen/ramdb.hpp>
 
-#if MIOPEN_BACKEND_OPENCL
-#define CL_TARGET_OPENCL_VERSION 120
-#ifdef __APPLE__
-#include <OpenCL/opencl.h>
-#else
-#include <CL/cl.h>
-#endif
-#endif
-
 #ifdef __APPLE__
 #include <mach/mach_time.h> // for mach_absolute_time() and friends
 #endif
 
-#include <iomanip>
-#include <cstdio>
-#include <cstdlib>
-#include <cassert>
-#include <cmath>
-#include <map>
-#include <string>
-#include <limits>
-#include <algorithm> // std::find  and std::min std::maxx
-
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <ctime>
-#include <cstring>
-#include <vector>
-#include <numeric>
-#include <cstdint>
-#include <tuple>
-#include <numbers>
+#ifndef M_LN2
+#define M_LN2 0.693147180559945309417
+#endif
 
 inline int mloLg2(int v)
 {
-    auto ret = static_cast<int>(std::ceil(std::log(v) / std::numbers::ln2));
+    auto ret = static_cast<int>(std::ceil(std::log(v) / M_LN2));
     return (ret);
 }
 
@@ -173,74 +142,76 @@ auto mloConstruct(T& x) -> decltype(x.mloConstruct(), void())
     x.mloConstruct();
 }
 
-MIOPEN_INTERNALS_EXPORT std::vector<miopen::solver::ConvSolution>
+std::vector<miopen::solver::ConvSolution>
 FindAllGemmSolutions(const miopen::ExecutionContext& ctx,
                      const miopen::conv::ProblemDescription& problem,
                      const miopen::AnyInvokeParams& invoke_ctx);
 
-MIOPEN_INTERNALS_EXPORT std::vector<std::pair<std::string, size_t>>
+std::vector<std::pair<std::string, size_t>>
 AllGemmWorkspaceSize(const miopen::ExecutionContext& ctx,
                      const miopen::conv::ProblemDescription& problem);
 
-MIOPEN_INTERNALS_EXPORT std::vector<std::pair<std::string, size_t>>
+std::vector<std::pair<std::string, size_t>>
 AllDirectForwardBackwardDataWorkspaceSize(const miopen::ExecutionContext& ctx,
                                           const miopen::conv::ProblemDescription& problem);
 
-MIOPEN_INTERNALS_EXPORT std::vector<std::pair<std::string, size_t>>
+std::vector<std::pair<std::string, size_t>>
 FindAllImplicitGemmWorkspaceSizes(const miopen::ExecutionContext& ctx,
                                   const miopen::conv::ProblemDescription& problem);
 
-MIOPEN_INTERNALS_EXPORT std::vector<std::pair<std::string, size_t>>
+std::vector<std::pair<std::string, size_t>>
 FindAllWinogradWorkspaceSizes(const miopen::ExecutionContext& ctx,
                               const miopen::conv::ProblemDescription& problem);
 
-MIOPEN_INTERNALS_EXPORT std::vector<std::pair<std::string, size_t>>
+std::vector<std::pair<std::string, size_t>>
 FindWinogradWrWWorkspaceSizes(const miopen::ExecutionContext& ctx,
                               const miopen::conv::ProblemDescription& problem);
 
-MIOPEN_INTERNALS_EXPORT std::vector<std::pair<std::string, size_t>>
+std::vector<std::pair<std::string, size_t>>
 FindImplicitGemmWrWWorkspaceSizes(const miopen::ExecutionContext& ctx,
                                   const miopen::conv::ProblemDescription& problem);
 
-MIOPEN_INTERNALS_EXPORT std::vector<std::pair<std::string, size_t>>
+std::vector<std::pair<std::string, size_t>>
 AllDirectBwdWrW2DWorkspaceSize(const miopen::ExecutionContext& ctx,
                                const miopen::conv::ProblemDescription& problem);
 
-MIOPEN_INTERNALS_EXPORT std::vector<std::pair<std::string, size_t>>
+std::vector<std::pair<std::string, size_t>>
 AllFFTForwardBackwardDataWorkspaceSize(const miopen::ExecutionContext& ctx,
                                        const miopen::conv::ProblemDescription& problem);
 
-MIOPEN_INTERNALS_EXPORT std::vector<miopen::solver::ConvSolution>
+MIOPEN_INTERNALS_EXPORT
+std::vector<miopen::solver::ConvSolution>
 FindAllDirectSolutions(const miopen::ExecutionContext& ctx,
                        const miopen::conv::ProblemDescription& problem,
                        const miopen::AnyInvokeParams& invoke_ctx);
 
-MIOPEN_INTERNALS_EXPORT std::vector<miopen::solver::ConvSolution>
+std::vector<miopen::solver::ConvSolution>
 FindAllImplicitGemmSolutions(const miopen::ExecutionContext& ctx,
                              const miopen::conv::ProblemDescription& problem,
                              const miopen::AnyInvokeParams& invoke_ctx);
 
-MIOPEN_INTERNALS_EXPORT std::vector<miopen::solver::ConvSolution>
+std::vector<miopen::solver::ConvSolution>
 FindAllWinogradSolutions(const miopen::ExecutionContext& ctx,
                          const miopen::conv::ProblemDescription& problem,
                          const miopen::AnyInvokeParams& invoke_ctx);
 
-MIOPEN_INTERNALS_EXPORT std::vector<miopen::solver::ConvSolution>
+std::vector<miopen::solver::ConvSolution>
 FindWinogradWrWAllSolutions(const miopen::ExecutionContext& ctx,
                             const miopen::conv::ProblemDescription& problem,
                             const miopen::AnyInvokeParams& invoke_ctx);
 
-MIOPEN_INTERNALS_EXPORT std::vector<miopen::solver::ConvSolution>
+std::vector<miopen::solver::ConvSolution>
 FindImplicitGemmWrWAllSolutions(const miopen::ExecutionContext& ctx,
                                 const miopen::conv::ProblemDescription& problem,
                                 const miopen::AnyInvokeParams& invoke_ctx);
 
-MIOPEN_INTERNALS_EXPORT std::vector<miopen::solver::ConvSolution>
+MIOPEN_INTERNALS_EXPORT
+std::vector<miopen::solver::ConvSolution>
 FindAllBwdWrW2DSolutions(const miopen::ExecutionContext& ctx,
                          const miopen::conv::ProblemDescription& problem,
                          const miopen::AnyInvokeParams& invoke_ctx);
 
-MIOPEN_INTERNALS_EXPORT std::vector<miopen::solver::ConvSolution>
+std::vector<miopen::solver::ConvSolution>
 FindAllFFTSolutions(const miopen::ExecutionContext& ctx,
                     const miopen::conv::ProblemDescription& problem,
                     const miopen::AnyInvokeParams& invoke_ctx);

@@ -826,10 +826,3 @@ add_subdirectory(src)
 if(MIOPEN_BUILD_DRIVER)
     add_subdirectory(driver)
 endif()
-
-if(BUILD_TESTING)
-    add_subdirectory(test)
-    add_subdirectory(speedtests)
-endif()
-
-add_subdirectory(utils)
